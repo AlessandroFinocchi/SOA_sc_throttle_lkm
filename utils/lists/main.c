@@ -4,11 +4,11 @@
 
 struct node_t *list;
 
-int visit(const char *str, bool first){
+int visit(const char *str, bool first) {
 	return printf("%s%s", !first? "," : "", str);
 }
 
-int main(void){
+int main(void) {
 	struct node_t *curr, *one, *two;
 	
 	init_list(&list);
