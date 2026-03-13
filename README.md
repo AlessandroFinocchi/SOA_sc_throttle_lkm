@@ -23,3 +23,6 @@ In più, sulla base del valore di *MAX* selezionato, il device driver deve anche
 - Il **numero massimo** e **medio** di thread che sono stati bloccati
 
 Della repository fanno parte anche il codice user-level per configurare l'LKM e per testare il corretto funzionamento del software sviluppato.
+
+## Future works
+1. Pensato per kernel 6.12, estendere il funzionamento dipendentemente dalla versione del kernel.
