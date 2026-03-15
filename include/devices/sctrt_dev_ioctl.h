@@ -49,6 +49,7 @@ struct sc_throttle_param {
 #define SC_THROTTLE_DEREG_UID   _IOW(SC_THROTTLE_MAGIC, OP_DEREG_UID,         struct sc_throttle_param)
 #define SC_THROTTLE_REG_PROG    _IOW(SC_THROTTLE_MAGIC, OP_REG_PROG,          struct sc_throttle_param)
 #define SC_THROTTLE_DEREG_PROG  _IOW(SC_THROTTLE_MAGIC, OP_DEREG_PROG,        struct sc_throttle_param)
+
 #define SC_THROTTLE_GET_TELEM   _IOR(SC_THROTTLE_MAGIC, OP_GET_TELEMETRY,     struct sc_throttle_param)
 
 long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);

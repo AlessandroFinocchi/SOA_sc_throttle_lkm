@@ -2,6 +2,7 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/cred.h>
+#include <linux/capability.h>
 
 #include "sctrt_dev_ioctl.h"
 
@@ -9,17 +10,19 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
     struct sc_throttle_param param;
     long ret = 0;
 
-    // Controllo dei privilegi root
-    if (current_euid().val != 0) {
-        return -EPERM;
-    }
-
-    /* * Se il comando prevede il passaggio di parametri da user a kernel (Scrittura),
-     * copiamo in modo sicuro la struttura nello spazio kernel */
+    /* Se il comando è una scrittura */
     if (_IOC_DIR(cmd) & _IOC_WRITE) {
+        if (!capable(CAP_SYS_ADMIN))
+            return -EPERM;
+        // if(current_euid().val != 0)
+        //     return -EPERM;
         if (copy_from_user(&param, (struct sc_throttle_param __user *)arg, sizeof(param))) 
             return -EFAULT;
     }
+
+    /* Se il comando è una lettura*/
+    if ((_IOC_DIR(cmd) & _IOC_READ)) 
+        memset(&param, 0, sizeof(param)); // Pulizia preventiva
 
     /* Dispatching comandi */
     switch (cmd) {
@@ -58,7 +61,6 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
             break;
 
         case SC_THROTTLE_GET_TELEM: // Estrazione statistiche
-            memset(&param, 0, sizeof(param)); // Pulizia preventiva
             // get_current_telemetry(&param.data.telemetry);
             break;
 
@@ -66,9 +68,7 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
             return -ENOTTY;
     }
 
-    /* * Se il comando prevede di restituire dati allo user-space (Lettura),
-     * copiamo la struttura popolata indietro.
-     */
+    /* Se il comando è una lettura*/
     if ((_IOC_DIR(cmd) & _IOC_READ) && ret == 0) {
         if (copy_to_user((struct sc_throttle_param __user *)arg, &param, sizeof(param))) {
             return -EFAULT;
