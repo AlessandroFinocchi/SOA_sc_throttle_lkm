@@ -5,7 +5,7 @@
 
 #include "sctrt_dev_ioctl.h"
 
-static long sc_throttle_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
+long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
     struct sc_throttle_param param;
     long ret = 0;
 

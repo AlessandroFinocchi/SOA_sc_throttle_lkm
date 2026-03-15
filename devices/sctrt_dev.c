@@ -1,53 +1,80 @@
-#include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/device.h>
 #include <linux/err.h>
+#include <linux/cdev.h>
 
-#define DEVICE_NAME "sctrt_dev"  // Nome device in /dev/
+#include "sctrt_dev.h"
+#include "sctrt_dev_ioctl.h"
 
-static int Major; // Major number assigned to device driver
-static struct class *sctrt_class = NULL;
-static struct device *sctrt_device = NULL;
+#define DEVICE_NAME  "sctrt_dev"
+#define DEVICE_CLASS "sctrt_dev_cls"
+
+struct sctrt_cdev {
+    dev_t           dev;        // Major number
+    struct cdev     cdev;		// Character device
+    struct class   *class;		// Device class
+};
+
+static struct sctrt_cdev device;
 
 static struct file_operations fops = {
   .owner = THIS_MODULE,
-  .unlocked_ioctl = sc_throttle_ioctl
+  .unlocked_ioctl = sctrt_dev_ioctl
 };
 
 int sctrt_dev_init(void) {
-    Major = register_chrdev(0, DEVICE_NAME, &fops);
-
-	if (Major < 0) {
-	  printk("Registering device failed\n");
-	  return Major;
+    int status;
+#ifdef STATIC_DEVNR
+	status = register_chrdev_region(device.dev, 1, DEVICE_NAME);
+#else
+	status = alloc_chrdev_region(&device.dev, 0, 1, DEVICE_NAME);
+#endif
+	if (status) {
+		pr_err("%s - Error reserving the region of device numbers\n", DEVICE_NAME);
+		return status;
 	}
 
-	/* Creazione automatica del device node /dev/sctrt_dev */
-	sctrt_class = class_create(DEVICE_NAME);
-	if (IS_ERR(sctrt_class)) {
-		unregister_chrdev(Major, DEVICE_NAME);
-		printk(KERN_ALERT "Failed to register device class\n");
-		return PTR_ERR(sctrt_class);
+	cdev_init(&device.cdev, &fops);
+	device.cdev.owner = THIS_MODULE;
+
+	if ((status = cdev_add(&device.cdev, device.dev, 1))) {
+		pr_err("%s - Error adding cdev\n", DEVICE_NAME);
+		goto free_dev;
 	}
 
-	sctrt_device = device_create(sctrt_class, NULL, MKDEV(Major, 0), NULL, DEVICE_NAME);
-	if (IS_ERR(sctrt_device)) {
-		class_destroy(sctrt_class);
-		unregister_chrdev(Major, DEVICE_NAME);
-		printk(KERN_ALERT "Failed to create the device\n");
-		return PTR_ERR(sctrt_device);
+	pr_info("%s - Registered a character device for Major %d starting with Minor %d\n", DEVICE_NAME, MAJOR(device.dev), MINOR(device.dev));
+
+	if (!(device.class = class_create(DEVICE_CLASS))) {
+		pr_err("%s - Could not create class %s\n", DEVICE_NAME, DEVICE_CLASS);
+		status = ENOMEM;
+		goto delete_cdev;
 	}
 
-	printk(KERN_INFO "Device registered, it is assigned major number %d\n", Major);
+	if (!(device_create(device.class, NULL, device.dev, NULL, "%s%d", DEVICE_NAME, 0))) {
+		pr_err("%s - Could not create device %s%d\n", DEVICE_NAME, 0);
+		status = ENOMEM;
+		goto delete_class;
+	}
+
+	pr_info("%s - Created device\n", DEVICE_NAME);
 
 	return 0;
+
+delete_class:
+	class_unregister(device.class);
+	class_destroy(device.class);
+delete_cdev:
+	cdev_del(&device.cdev);
+free_dev:
+	unregister_chrdev_region(device.dev, 1);
+	return status;
 }
 
 
 void sctrt_dev_cleanup(void){
-	device_destroy(sctrt_class, MKDEV(Major, 0));
-	class_destroy(sctrt_class);
-	unregister_chrdev(Major, DEVICE_NAME);
-
-	printk(KERN_INFO "Broadcast device unregistered, it was assigned major number %d\n", Major);
+	device_destroy(device.class, device.dev);
+	class_unregister(device.class);
+	class_destroy(device.class);
+	cdev_del(&device.cdev);
+	unregister_chrdev_region(device.dev, 1);
 }

@@ -1,11 +1,15 @@
 # Definisce il nome del modulo finale
-MODULE_NAME := euid_module
+MODULE_NAME := sctrt_module
 
 # Indica a Kbuild di generare un modulo loadable
 obj-m := $(MODULE_NAME).o
 
 # Specifica i file oggetto che compongono il modulo
-$(MODULE_NAME)-y := euid_hash.o main.o
+$(MODULE_NAME)-objs := devices/sctrt_dev.o \
+                       devices/sctrt_dev_ioctl.o \
+                       sctrt.o
+
+ccflags-y += -I$(PWD)/devices
 
 # Percorso all'albero dei sorgenti o agli header del kernel in esecuzione
 KDIR := /lib/modules/$(shell uname -r)/build
@@ -13,7 +17,7 @@ KDIR := /lib/modules/$(shell uname -r)/build
 # Directory corrente
 PWD := $(shell pwd)
 
-# Target predefinito per la compilazione
+# Compilazione del modulo kernel
 all:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
@@ -28,6 +32,6 @@ all:
 		rm /tmp/$(MODULE_NAME)_save.ko; \
 	fi
 
-# Target per la pulizia dei file generati
+# Pulizia file generati
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean

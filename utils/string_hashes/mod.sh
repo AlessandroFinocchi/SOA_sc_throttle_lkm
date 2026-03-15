@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$#" -lt 2 ]; then
-    echo "Errore. Sintassi formale: $0 <ins|rm|ls> <nome_modulo>"
+    echo "Errore. Sintassi formale: $0 <nome_modulo> <ins|rm|ls>"
     exit 1
 fi
 
