@@ -51,7 +51,7 @@ int sctrt_dev_init(void) {
 	}
 
 	if (!(device_create(device.class, NULL, device.dev, NULL, "%s%d", DEVICE_NAME, 0))) {
-		pr_err("%s - Could not create device %s%d\n", DEVICE_NAME, 0);
+		pr_err("%s - Could not create device %s%d\n", DEVICE_NAME, DEVICE_NAME, 0);
 		status = ENOMEM;
 		goto delete_class;
 	}
