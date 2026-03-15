@@ -24,5 +24,11 @@ In più, sulla base del valore di *MAX* selezionato, il device driver deve anche
 
 Della repository fanno parte anche il codice user-level per configurare l'LKM e per testare il corretto funzionamento del software sviluppato.
 
+## Architettura
+Per maggiori informazioni, vedere [Documentazione Architettura](docs/architecture.md)
+
+## Guida d'uso
+Per maggiori informazioni, vedere [Documentazione Architettura](docs/usage_guide.md)
+
 ## Future works
 1. Pensato per kernel 6.12, estendere il funzionamento dipendentemente dalla versione del kernel.
