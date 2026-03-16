@@ -8,11 +8,6 @@
 
 #include "str_hash.h"
 
-#define STR_HASH_BITS 8
-
-static DEFINE_SPINLOCK(string_hash_lock); // Spinlock per writer RCU
-static DEFINE_HASHTABLE(string_hash_table, STR_HASH_BITS);
-
 struct string_node {
     struct hlist_node node;
     struct rcu_head rcu;
@@ -23,12 +18,21 @@ static inline u32 hash_string(char *str) {
     return jhash(str, strlen(str), 0);
 }
 
-int str_hash_add(char *new_str) {
+int str_hash_init(struct string_hash *hash) {
+    if (!hash)
+        return -EINVAL;
+
+    spin_lock_init(&hash->lock);
+    hash_init(hash->table);
+    return 0;
+}
+
+int str_hash_add(struct string_hash *hash, char *new_str) {
     struct string_node *new_node;
-    u32 hash;
+    u32 h;
     size_t len;
 
-    if (!new_str)
+    if (!hash || !new_str)
         return -EINVAL;
 
     len = strlen(new_str) + 1;
@@ -38,27 +42,27 @@ int str_hash_add(char *new_str) {
         return -ENOMEM;
 
     strscpy(new_node->str, new_str, len);
-    hash = hash_string(new_str);
+    h = hash_string(new_str);
 
-    spin_lock(&string_hash_lock);
-    hash_add_rcu(string_hash_table, &new_node->node, hash);
-    spin_unlock(&string_hash_lock);
+    spin_lock(&hash->lock);
+    hash_add_rcu(hash->table, &new_node->node, h);
+    spin_unlock(&hash->lock);
 
     return 0;
 }
 
-bool str_hash_lookup(char *target) {
+bool str_hash_lookup(struct string_hash *hash, char *target) {
     struct string_node *curr;
-    u32 hash;
+    u32 h;
     bool found = false;
 
-    if (!target)
+    if (!hash ||!target)
         return false;
 
-    hash = hash_string(target);
+    h = hash_string(target);
 
     rcu_read_lock();
-    hash_for_each_possible_rcu(string_hash_table, curr, node, hash) {
+    hash_for_each_possible_rcu(hash->table, curr, node, h) {
         if (strcmp(curr->str, target) == 0) {
             found = true;
             break;
@@ -69,43 +73,55 @@ bool str_hash_lookup(char *target) {
     return found;
 }
 
-void str_hash_del(char *target) {
+void str_hash_del(struct string_hash *hash, char *target) {
     struct string_node *curr;
-    struct hlist_node *tmp;
-    u32 hash;
+    u32 h;
 
-    if (!target)
+    if (!hash || !target)
         return;
 
-    hash = hash_string(target);
+    h = hash_string(target);
 
-    spin_lock(&string_hash_lock);
-    hash_for_each_possible_safe(string_hash_table, curr, tmp, node, hash) {
+    spin_lock(&hash->lock);
+    hash_for_each_possible(hash->table, curr, node, h) {
         if (strcmp(curr->str, target) == 0) {
-            hash_del_rcu(&curr->node);
-            spin_unlock(&string_hash_lock);
+            hlist_del_rcu(&curr->node);
+            spin_unlock(&hash->lock);
             kfree_rcu(curr, rcu);
             return;
         }
     }
-    spin_unlock(&string_hash_lock);
+    spin_unlock(&hash->lock);
 }
 
-void str_hash_cleanup(void) {
+void str_hash_cleanup(struct string_hash *hash) {
     struct string_node *curr;
     struct hlist_node *tmp;
     int bkt;
 
-    spin_lock(&string_hash_lock);
-    /* L'iteratore _safe è essenziale per non corrompere la lista durante le rimozioni */
-    hash_for_each_safe(string_hash_table, bkt, tmp, curr, node) {
+    if (!hash)
+        return;
+
+    spin_lock(&hash->lock);
+    hash_for_each_safe(hash->table, bkt, tmp, curr, node) {
         hash_del_rcu(&curr->node);
         kfree_rcu(curr, rcu);
     }
-    spin_unlock(&string_hash_lock);
+    spin_unlock(&hash->lock);
 
-    /* * RCU barrier blocca l'esecuzione finché tutte le callback di kfree_rcu 
-     * pendenti non sono state completate. Cruciale prima di scaricare il modulo.
-     */
     rcu_barrier();
+}
+
+void str_hash_print(struct string_hash *hash) {
+    struct string_node *curr;
+    int bkt;
+
+    if (!hash)
+        return;
+
+    rcu_read_lock();
+    hash_for_each(hash->table, bkt, curr, node) {
+        pr_info("STR_HASH: str=%s", curr->str);
+    }
+    rcu_read_unlock();
 }

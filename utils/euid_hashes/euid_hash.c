@@ -6,11 +6,6 @@
 
 #include "euid_hash.h"
 
-#define EUID_HASH_BITS 8
-
-static DEFINE_SPINLOCK(euid_hash_lock); // Spinlock per writer RCU
-static DEFINE_HASHTABLE(euid_hash_table, EUID_HASH_BITS);
-
 struct euid_node {
     struct hlist_node node;
     struct rcu_head rcu;
@@ -21,78 +16,107 @@ static inline u32 hash_euid(kuid_t euid) {
     return __kuid_val(euid);
 }
 
-int euid_hash_add(kuid_t euid) {
-    struct euid_node *new_node;
-    u32 hash;
+int euid_hash_init(struct euid_hash *hash) {
+    if (!hash)
+        return -EINVAL;
 
-    // Allocazione in process ctx., usa GFP_ATOMIC se in interrupt ctx.
-    new_node = kmalloc(sizeof(*new_node), GFP_KERNEL);  
+    spin_lock_init(&hash->lock);
+    hash_init(hash->table);
+    return 0;
+}
+
+int euid_hash_add(struct euid_hash *hash, kuid_t euid) {
+    struct euid_node *new_node;
+    u32 h;
+
+    if (!hash)
+        return -EINVAL;
+
+    new_node = kmalloc(sizeof(*new_node), GFP_KERNEL);
     if (!new_node)
         return -ENOMEM;
 
     new_node->euid = euid;
-    hash = hash_euid(euid);
+    h = hash_euid(euid);
 
-    spin_lock(&euid_hash_lock);
-    hash_add_rcu(euid_hash_table, &new_node->node, hash);
-    spin_unlock(&euid_hash_lock);
-    
+    spin_lock(&hash->lock);
+    hash_add_rcu(hash->table, &new_node->node, h);
+    spin_unlock(&hash->lock);
+
     return 0;
 }
 
-bool euid_hash_lookup(kuid_t euid) {
+bool euid_hash_lookup(struct euid_hash *hash, kuid_t euid) {
     struct euid_node *curr;
-    u32 hash;
+    u32 h;
     bool found = false;
 
-    hash = hash_euid(euid);
+    if (!hash)
+        return false;
+
+    h = hash_euid(euid);
 
     rcu_read_lock();
-    hash_for_each_possible_rcu(euid_hash_table, curr, node, hash) {
+    hash_for_each_possible_rcu(hash->table, curr, node, h) {
         if (uid_eq(curr->euid, euid)) {
             found = true;
             break;
         }
     }
     rcu_read_unlock();
-    
+
     return found;
 }
 
-void euid_hash_del(kuid_t euid) {
+void euid_hash_del(struct euid_hash *hash, kuid_t euid) {
     struct euid_node *curr;
-    struct hlist_node *tmp;
-    u32 hash;
+    u32 h;
 
-    hash = hash_euid(euid);
+    if (!hash)
+        return;
 
-    spin_lock(&euid_hash_lock);
-    hash_for_each_possible_safe(euid_hash_table, curr, tmp, node, hash) {
+    h = hash_euid(euid);
+
+    spin_lock(&hash->lock);
+    hash_for_each_possible(hash->table, curr, node, h) {
         if (uid_eq(curr->euid, euid)) {
-            hash_del_rcu(&curr->node);
-            spin_unlock(&euid_hash_lock);
+            hlist_del_rcu(&curr->node); 
+            spin_unlock(&hash->lock);
             kfree_rcu(curr, rcu);
             return;
         }
     }
-    spin_unlock(&euid_hash_lock);
+    spin_unlock(&hash->lock);
 }
 
-void euid_hash_cleanup(void) {
+void euid_hash_cleanup(struct euid_hash *hash) {
     struct euid_node *curr;
     struct hlist_node *tmp;
     int bkt;
 
-    spin_lock(&euid_hash_lock);
-    /* L'iteratore _safe è essenziale per non corrompere la lista durante le rimozioni */
-    hash_for_each_safe(euid_hash_table, bkt, tmp, curr, node) {
+    if (!hash)
+        return;
+
+    spin_lock(&hash->lock);
+    hash_for_each_safe(hash->table, bkt, tmp, curr, node) {
         hash_del_rcu(&curr->node);
         kfree_rcu(curr, rcu);
     }
-    spin_unlock(&euid_hash_lock);
+    spin_unlock(&hash->lock);
 
-    /* * RCU barrier blocca l'esecuzione finché tutte le callback di kfree_rcu 
-     * pendenti non sono state completate. Cruciale prima di scaricare il modulo.
-     */
     rcu_barrier();
+}
+
+void euid_hash_print(struct euid_hash *hash) {
+    struct euid_node *curr;
+    int bkt;
+
+    if (!hash)
+        return;
+
+    rcu_read_lock();
+    hash_for_each(hash->table, bkt, curr, node) {
+        pr_info("EUID_HASH: euid=%u", __kuid_val(curr->euid));
+    }
+    rcu_read_unlock();
 }

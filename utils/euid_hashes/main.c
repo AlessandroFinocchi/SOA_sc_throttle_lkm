@@ -4,53 +4,71 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Autore");
-MODULE_DESCRIPTION("Dimostrazione Hash Table RCU per EUIDs");
+MODULE_DESCRIPTION("Dimostrazione Hash Table RCU per EUIDs con più tabelle");
 
 #define MODNAME "HASH"
 
+static struct euid_hash hash_a;
+static struct euid_hash hash_b;
+
 static int __init euid_demo_init(void)
 {
-    kuid_t test_uid_1 = KUIDT_INIT(1000);
-    kuid_t test_uid_2 = KUIDT_INIT(1001);
     int ret;
 
-    pr_info("EUID_DEMO: Inizializzazione modulo e test hash table.\n");
+    pr_info("EUID_DEMO: ------------------------------------------");
+    pr_info("EUID_DEMO: Inizializzazione modulo e test hash table.");
 
-    /* Test 1: Inserimento */
-    ret = euid_hash_add(test_uid_1);
+    ret = euid_hash_init(&hash_a);
     if (ret) {
-        pr_err("EUID_DEMO: Errore nell'allocazione per UID 1000\n");
+        pr_err("EUID_DEMO: fallito inizializzare hash_a (%d)", ret);
         return ret;
     }
-    euid_hash_add(test_uid_2);
-    pr_info("EUID_DEMO: Inseriti EUID 1000 e 1001.\n");
 
-    /* Test 2: Ricerca con RCU */
-    if (euid_hash_lookup(test_uid_1))
-        pr_info("EUID_DEMO: EUID 1000 trovato correttamente.\n");
+    ret = euid_hash_init(&hash_b);
+    if (ret) {
+        pr_err("EUID_DEMO: fallito inizializzare hash_b (%d)", ret);
+        return ret;
+    }
+
+    euid_hash_add(&hash_a, KUIDT_INIT(1000));
+    euid_hash_add(&hash_a, KUIDT_INIT(1001));
+    euid_hash_add(&hash_b, KUIDT_INIT(2000));
+
+    if (euid_hash_lookup(&hash_a, KUIDT_INIT(1000)))
+        pr_info("EUID_DEMO: hash_a trova 1000 (comportamento atteso).");
     else
-        pr_err("EUID_DEMO Errore: EUID 1000 mancante!\n");
+        pr_err("EUID_DEMO: hash_a NON trova 1000 (comportamento errato).");
 
-    if (!euid_hash_lookup(KUIDT_INIT(9999)))
-        pr_info("EUID_DEMO: EUID 9999 non trovato (comportamento atteso).\n");
+    if (!euid_hash_lookup(&hash_a, KUIDT_INIT(2000)))
+        pr_info("EUID_DEMO: hash_a non trova 2000 (comportamento atteso).");
+    else
+        pr_err("EUID_DEMO: hash_a non trova 2000 (comportamento errato).");
 
-    /* Test 3: Cancellazione */
-    euid_hash_del(test_uid_1);
-    pr_info("EUID_DEMO: EUID 1000 rimosso.\n");
+    if (euid_hash_lookup(&hash_b, KUIDT_INIT(2000)))
+        pr_info("EUID_DEMO: hash_b trova 2000 (comportamento atteso).");
+    else
+        pr_err("EUID_DEMO: hash_b NON trova 2000 (comportamento errato).");
 
-    if (!euid_hash_lookup(test_uid_1))
-        pr_info("EUID_DEMO: Conferma rimozione EUID 1000 con successo.\n");
+    euid_hash_del(&hash_a, KUIDT_INIT(1000));
+    if (!euid_hash_lookup(&hash_a, KUIDT_INIT(1000)))
+        pr_info("EUID_DEMO: hash_a conferma rimozione 1000 (comportamento atteso).");
+    else
+        pr_err("EUID_DEMO: hash_a NON conferma rimozione 1000 (comportamento errato).");
+
+
+    pr_info("EUID_DEMO: Stampo hash_a:");
+    euid_hash_print(&hash_a);
+    pr_info("EUID_DEMO: Stampo hash_b:");
+    euid_hash_print(&hash_b);
 
     return 0;
 }
 
 static void __exit euid_demo_exit(void)
 {
-    /* Pulizia residua per evitare memory leak al ricaricamento del modulo */
-    euid_hash_del(KUIDT_INIT(1001));
-    euid_hash_cleanup();
-    
-    pr_info("EUID_DEMO: Modulo terminato e memoria deallocata.\n");
+    euid_hash_cleanup(&hash_a);
+    euid_hash_cleanup(&hash_b);
+    pr_info("EUID_DEMO: Modulo terminato e memoria deallocata.");
 }
 
 module_init(euid_demo_init);
