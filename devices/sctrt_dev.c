@@ -22,11 +22,10 @@ static struct file_operations fops = {
   .unlocked_ioctl = sctrt_dev_ioctl
 };
 
-static char *sctrt_devnode(const struct device *dev, umode_t *mode)
+static char *devnode_mode(const struct device *dev, umode_t *mode)
 {
     if (mode) {
-        /* Assegna lettura a tutti, scrittura solo a root */
-        *mode = 0644; 
+        *mode = 0644; /* Assegna lettura a tutti, scrittura solo all'owner (root) */
     }
     return NULL;
 }
@@ -59,7 +58,7 @@ int sctrt_dev_init(void) {
 		goto delete_cdev;
 	}
 
-	device.class->devnode = sctrt_devnode;
+	device.class->devnode = devnode_mode;
 
 	if (!(device_create(device.class, NULL, device.dev, NULL, "%s", DEVICE_NAME))) {
 		pr_err("%s - Could not create device %s\n", DEVICE_NAME, DEVICE_NAME);
