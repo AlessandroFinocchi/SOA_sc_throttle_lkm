@@ -13,8 +13,7 @@ MODULE_DESCRIPTION("Test di Hash Table concorrente RCU");
 static struct string_hash hash_a;
 static struct string_hash hash_b;
 
-static int __init string_hash_test_init(void)
-{
+static int __init string_hash_test_init(void) {
     int ret;
 
     pr_info("STR_DEMO: ------------------------------------------");

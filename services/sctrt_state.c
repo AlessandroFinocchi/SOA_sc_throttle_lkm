@@ -9,7 +9,7 @@
 struct sctrt_state {
     bool is_active;
     uint MAX;
-    struct sc_bitmap *syscalls;
+    // struct sc_bitmap *syscalls;
     struct string_hash *programs;
     struct euid_hash *users;
 };
@@ -24,27 +24,27 @@ int sctrt_state_init(int max_syscalls) {
         goto end;
     }
 
-    if (!(status = sc_bitmap_create(state->syscalls, max_syscalls))) {
+    if (!(status = str_hash_init(state->programs))) {
         goto delete_state;
     }
 
-    if (!(status = str_hash_init(state->programs))) {
-        goto delete_state_syscalls;
+    if (!(status = euid_hash_init(state->users))) {
+        goto delete_state_programs;
     }
 
-    if (!(status = euid_hash_init(state->users))) {
-        goto delete_state_syscalls_programs;
-    }
+    // if (!(status = sc_bitmap_create(state->syscalls, max_syscalls))) {
+    //     goto delete_state_programs_users;
+    // }
 
     state->is_active = false;
     state->MAX = 0;
 
     return 0;
 
-delete_state_syscalls_programs:
-    sc_bitmap_cleanup(state->syscalls);
+// delete_state_programs_users:
+//     euid_hash_cleanup(state->users);
 
-delete_state_syscalls:
+delete_state_programs:
     str_hash_cleanup(state->programs);
 
 delete_state:
@@ -57,7 +57,7 @@ end:
 void sctrt_state_cleanup() {
     euid_hash_cleanup(state->users);
     str_hash_cleanup(state->programs);
-    sc_bitmap_cleanup(state->syscalls);
+    // sc_bitmap_cleanup(state->syscalls);
     kfree(state);
 }
 
