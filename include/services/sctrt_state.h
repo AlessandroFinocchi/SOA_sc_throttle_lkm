@@ -3,18 +3,20 @@
 
 #include <linux/types.h>
 
-int sctrt_state_init(void);
+int sctrt_state_init(int max_syscalls);
+void sctrt_state_cleanup(void);
 
-int sctrt_enable_monitor();
-int sctrt_disable_monitor();
+void sctrt_monitor_enable(void);
+void sctrt_monitor_disable(void);
+bool sctrt_monitor_is_active(void);
 
-int sctrt_set_max(unsigned int max);
-int sctrt_get_max();
+// int sctrt_max_set(unsigned int max);
+// int sctrt_max_get();
 
-int sctrt_register_euid(uid_t euid);
-int sctrt_deregister_euid(uid_t euid);
+// int sctrt_euid_register(uid_t euid);
+// int sctrt_euid_deregister(uid_t euid);
 
-int sctrt_register_syscall(int syscall_nr);
-int sctrt_deregister_syscall(int syscall_nr);
+// int sctrt_syscall_register(int syscall_nr);
+// int sctrt_syscall_deregister(int syscall_nr);
 
 #endif

@@ -3,7 +3,6 @@
 
 #include <linux/types.h>
 
-
 #define STR_HASH_BITS 8
 
 struct string_hash {

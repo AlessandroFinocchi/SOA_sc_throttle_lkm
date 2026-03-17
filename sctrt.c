@@ -2,6 +2,7 @@
 #include <linux/version.h>
 
 #include <sctrt_dev.h>
+#include <sctrt_state.h>
 
 #define MODNAME "sctrt"
 
@@ -12,17 +13,25 @@ MODULE_DESCRIPTION("This module intercepts a set of syscall from a set\
                     invocation rate.");
 
 static int sctrt_init(void) {
-	if (LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)){
-	 	printk("%s: unsupported kernel version", MODNAME);
-		return -1; 	
-	};
+	// if (LINUX_VERSION_CODE < KERNEL_VERSION(4,0,0)){
+	//  	printk("%s: unsupported kernel version", MODNAME);
+	// 	return -1; 	
+	// };
 
 	sctrt_dev_init();
+	sctrt_state_init(256);
 	
+	printk("%s: syscall throttler module loaded\n", MODNAME);
+	printk("%s: state before enable: %d\n", MODNAME, sctrt_monitor_is_active());
+	sctrt_monitor_enable();
+	printk("%s: state after enable: %d\n", MODNAME, sctrt_monitor_is_active());
+
+
 	return 0;
 }
 
 static void sctrt_exit(void) {
+	sctrt_state_cleanup();
 	sctrt_dev_cleanup();
 	printk("%s: syscall throttler module unloaded\n", MODNAME);
 }

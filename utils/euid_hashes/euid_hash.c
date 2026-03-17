@@ -99,7 +99,7 @@ void euid_hash_cleanup(struct euid_hash *hash) {
 
     spin_lock(&hash->lock);
     hash_for_each_safe(hash->table, bkt, tmp, curr, node) {
-        hash_del_rcu(&curr->node);
+        hlist_del_rcu(&curr->node);
         kfree_rcu(curr, rcu);
     }
     spin_unlock(&hash->lock);
@@ -115,7 +115,7 @@ void euid_hash_print(struct euid_hash *hash) {
         return;
 
     rcu_read_lock();
-    hash_for_each(hash->table, bkt, curr, node) {
+    hash_for_each_rcu(hash->table, bkt, curr, node) {
         pr_info("EUID_HASH: euid=%u", __kuid_val(curr->euid));
     }
     rcu_read_unlock();

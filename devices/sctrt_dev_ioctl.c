@@ -35,7 +35,7 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
             break;
 
         case SC_THROTTLE_REG_SYS: // Aggiunta syscall
-            // register_syscall(param.data.syscall_num);
+            // sc_bitmap_register(param.data.syscall_num);
             break;
 
         case SC_THROTTLE_DEREG_SYS: // Rimozione syscall
