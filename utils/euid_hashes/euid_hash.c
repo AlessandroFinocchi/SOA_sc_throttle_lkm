@@ -43,6 +43,8 @@ int euid_hash_add(struct euid_hash *hash, kuid_t euid) {
     new_node->euid = euid;
     h = hash_euid(euid);
 
+    // I lettori (in interrupt ctx) non acquisiscono mai lo spinlock,
+    // quindi non serve spin_lock_irqsave()
     spin_lock(&hash->lock);
     hash_add_rcu(hash->table, &new_node->node, h);
     spin_unlock(&hash->lock);
@@ -50,6 +52,11 @@ int euid_hash_add(struct euid_hash *hash, kuid_t euid) {
     return 0;
 }
 
+/* 
+ * Eseguita in interrupt ctx: rcu_read_lock/unlock implementa un meccanismo
+ * wait-free per i lettori, e la coerenza rispetto ad add/delete è garantita
+ * dal loro utilizzo di hash_add_rcu e hlist_del_rcu.
+ */
 bool euid_hash_lookup(struct euid_hash *hash, kuid_t euid) {
     struct euid_node *curr;
     u32 h;
@@ -81,6 +88,8 @@ void euid_hash_del(struct euid_hash *hash, kuid_t euid) {
 
     h = hash_euid(euid);
 
+    // I lettori (in interrupt ctx) non acquisiscono mai lo spinlock,
+    // quindi non serve spin_lock_irqsave()
     spin_lock(&hash->lock);
     hash_for_each_possible(hash->table, curr, node, h) {
         if (uid_eq(curr->euid, euid)) {

@@ -48,6 +48,8 @@ int str_hash_add(struct string_hash *hash, char *new_str) {
     strscpy(new_node->str, new_str, len);
     h = hash_string(new_str);
 
+    // I lettori (in interrupt ctx) non acquisiscono mai lo spinlock,
+    // quindi non serve spin_lock_irqsave()
     spin_lock(&hash->lock);
     hash_add_rcu(hash->table, &new_node->node, h);
     spin_unlock(&hash->lock);
@@ -55,12 +57,17 @@ int str_hash_add(struct string_hash *hash, char *new_str) {
     return 0;
 }
 
+/* 
+ * Eseguita in interrupt ctx: rcu_read_lock/unlock implementa un meccanismo
+ * wait-free per i lettori, e la coerenza rispetto ad add/delete è garantita
+ * dal loro utilizzo di hash_add_rcu e hlist_del_rcu.
+ */
 bool str_hash_lookup(struct string_hash *hash, char *target) {
     struct string_node *curr;
     u32 h;
     bool found = false;
 
-    if (!hash ||!target)
+    if (!hash || !target)
         return false;
 
     h = hash_string(target);
@@ -86,6 +93,8 @@ void str_hash_del(struct string_hash *hash, char *target) {
 
     h = hash_string(target);
 
+    // I lettori (in interrupt ctx) non acquisiscono mai lo spinlock,
+    // quindi non serve spin_lock_irqsave()
     spin_lock(&hash->lock);
     hash_for_each_possible(hash->table, curr, node, h) {
         if (strcmp(curr->str, target) == 0) {

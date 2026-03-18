@@ -5,6 +5,8 @@
 
 #include "sc_bitmap.h"
 
+/* Sincronizzazione garantita dalle operazioni RMW */
+
 int sc_bitmap_init(struct sc_bitmap **syscalls_ptr, unsigned int max_syscalls) {
     if (!syscalls_ptr)
         return -EINVAL;

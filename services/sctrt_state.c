@@ -51,6 +51,7 @@ end:
 }
 
 void sctrt_state_cleanup() {
+    /* Assicurarsi di aver terminato tutte le lookup */
     sc_bitmap_cleanup(state->syscalls);
     euid_hash_cleanup(state->users);
     str_hash_cleanup(state->programs);
