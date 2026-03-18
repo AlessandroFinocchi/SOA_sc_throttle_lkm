@@ -8,9 +8,7 @@ obj-m := $(MODULE_NAME).o
 MODULE_SRCS := $(filter-out %main.c, \
 			   $(wildcard devices/*.c) \
 			   $(wildcard services/*.c) \
-			   $(wildcard utils/euid_hashes/*.c) \
-			   $(wildcard utils/sc_bitmaps/*.c) \
-			   $(wildcard utils/string_hashes/*.c) \
+			   $(wildcard utils/ds/*.c) \
 			   sctrt.c)
 
 # Converte la lista di sorgenti .c in una lista di oggetti .o
