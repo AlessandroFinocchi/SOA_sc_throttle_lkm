@@ -84,12 +84,12 @@ bool str_hash_lookup(struct string_hash *hash, char *target) {
     return found;
 }
 
-void str_hash_del(struct string_hash *hash, char *target) {
+int str_hash_del(struct string_hash *hash, char *target) {
     struct string_node *curr;
     u32 h;
 
     if (!hash || !target)
-        return;
+        return -EINVAL;
 
     h = hash_string(target);
 
@@ -101,10 +101,11 @@ void str_hash_del(struct string_hash *hash, char *target) {
             hlist_del_rcu(&curr->node);
             spin_unlock(&hash->lock);
             kfree_rcu(curr, rcu);
-            return;
+            return 0;
         }
     }
     spin_unlock(&hash->lock);
+    return -EINVAL;
 }
 
 void str_hash_cleanup(struct string_hash *hash) {
@@ -135,8 +136,9 @@ void str_hash_print(struct string_hash *hash) {
         return;
 
     rcu_read_lock();
+    pr_info("STR_HASH: Programmi registrati:");
     hash_for_each_rcu(hash->table, bkt, curr, node) {
-        pr_info("STR_HASH: str=%s", curr->str);
+        pr_info("\t\t - %s", curr->str);
     }
     rcu_read_unlock();
 }

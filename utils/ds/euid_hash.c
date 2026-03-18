@@ -79,12 +79,12 @@ bool euid_hash_lookup(struct euid_hash *hash, kuid_t euid) {
     return found;
 }
 
-void euid_hash_del(struct euid_hash *hash, kuid_t euid) {
+int euid_hash_del(struct euid_hash *hash, kuid_t euid) {
     struct euid_node *curr;
     u32 h;
 
     if (!hash)
-        return;
+        return -EINVAL;
 
     h = hash_euid(euid);
 
@@ -93,13 +93,15 @@ void euid_hash_del(struct euid_hash *hash, kuid_t euid) {
     spin_lock(&hash->lock);
     hash_for_each_possible(hash->table, curr, node, h) {
         if (uid_eq(curr->euid, euid)) {
-            hlist_del_rcu(&curr->node); 
+            hlist_del_rcu(&curr->node);
             spin_unlock(&hash->lock);
             kfree_rcu(curr, rcu);
-            return;
+            return 0;
         }
     }
     spin_unlock(&hash->lock);
+
+    return -EINVAL;
 }
 
 void euid_hash_cleanup(struct euid_hash *hash) {
@@ -130,8 +132,10 @@ void euid_hash_print(struct euid_hash *hash) {
         return;
 
     rcu_read_lock();
+    pr_info("EUID_HASH: EUID registrati:");
     hash_for_each_rcu(hash->table, bkt, curr, node) {
-        pr_info("EUID_HASH: euid=%u", __kuid_val(curr->euid));
+        pr_cont(" %u", __kuid_val(curr->euid));
     }
+    pr_cont("\n");
     rcu_read_unlock();
 }

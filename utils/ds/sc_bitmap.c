@@ -62,3 +62,16 @@ void sc_bitmap_cleanup(struct sc_bitmap *syscalls) {
 
     kfree(syscalls);
 }
+
+void sc_bitmap_print(struct sc_bitmap *syscalls) {
+    if (!syscalls) {
+        return;
+    }
+
+    pr_info("SC_BITMAP: syscalls registrate:");
+    for (int i = 0; i < syscalls->max_entries; i++) {
+        if (test_bit(i, syscalls->bitmap))
+            pr_cont(" %u", i);
+    }
+    pr_cont("\n");
+}

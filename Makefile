@@ -1,5 +1,5 @@
 # Definisce il nome del modulo finale
-MODULE_NAME := throttler_module1
+MODULE_NAME := throttler_module
 
 # Indica a Kbuild di generare un modulo loadable
 obj-m := $(MODULE_NAME).o

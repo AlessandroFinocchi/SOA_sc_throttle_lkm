@@ -9,6 +9,7 @@
 
 /* Enum per la numerazione sequenziale dei comandi */
 enum sc_throttle_ops {
+    // Write
     OP_SET_MONITOR_STATE = 0,
     OP_SET_MAX_RATE,
     OP_REG_SYSCALL,
@@ -17,16 +18,25 @@ enum sc_throttle_ops {
     OP_DEREG_UID,
     OP_REG_PROG,
     OP_DEREG_PROG,
-    OP_GET_TELEMETRY
+
+    // Read
+    OP_GET_TELEMETRY,
+
+    // Debug
+    OP_PRINT_MONITOR_STATE,
+    OP_PRINT_MAX_RATE,
+    OP_PRINT_SYSCALLS,
+    OP_PRINT_USERS,
+    OP_PRINT_PROGRAMS
 };
 
 /* Struttura unificata per il passaggio dei parametri */
 struct sc_throttle_param {
     union {
-        int state;                  /* 1 = ON, 0 = OFF */
-        unsigned int max_rate;      /* Valore MAX di invocazioni al secondo */
-        int syscall_num;            /* Numero della system call x86-64 */
-        uid_t uid;                  /* User ID effettivo */
+        bool new_state;                    /* Monitor acceso/spento */
+        unsigned int max_rate;             /* Valore MAX di invocazioni al secondo */
+        int syscall_num;                   /* Numero della system call x86-64 */
+        uid_t uid;                         /* User ID effettivo */
         char prog_name[MAX_PROG_NAME_LEN]; /* Nome dell'eseguibile */
         
         /* Struttura annidata per la telemetria (direzione kernel -> user) */
@@ -41,6 +51,7 @@ struct sc_throttle_param {
 };
 
 /* Definizione formale dei comandi ioctl */
+// Write
 #define SC_THROTTLE_SET_STATE   _IOW(SC_THROTTLE_MAGIC, OP_SET_MONITOR_STATE, struct sc_throttle_param)
 #define SC_THROTTLE_SET_RATE    _IOW(SC_THROTTLE_MAGIC, OP_SET_MAX_RATE,      struct sc_throttle_param)
 #define SC_THROTTLE_REG_SYS     _IOW(SC_THROTTLE_MAGIC, OP_REG_SYSCALL,       struct sc_throttle_param)
@@ -50,7 +61,15 @@ struct sc_throttle_param {
 #define SC_THROTTLE_REG_PROG    _IOW(SC_THROTTLE_MAGIC, OP_REG_PROG,          struct sc_throttle_param)
 #define SC_THROTTLE_DEREG_PROG  _IOW(SC_THROTTLE_MAGIC, OP_DEREG_PROG,        struct sc_throttle_param)
 
+// Read
 #define SC_THROTTLE_GET_TELEM   _IOR(SC_THROTTLE_MAGIC, OP_GET_TELEMETRY,     struct sc_throttle_param)
+
+// Debug
+#define SC_THROTTLE_PRINT_STATE _IO(SC_THROTTLE_MAGIC, OP_PRINT_MONITOR_STATE)
+#define SC_THROTTLE_PRINT_RATE  _IO(SC_THROTTLE_MAGIC, OP_PRINT_MAX_RATE)
+#define SC_THROTTLE_PRINT_SYSCS _IO(SC_THROTTLE_MAGIC, OP_PRINT_SYSCALLS)
+#define SC_THROTTLE_PRINT_USERS _IO(SC_THROTTLE_MAGIC, OP_PRINT_USERS)
+#define SC_THROTTLE_PRINT_PROGS _IO(SC_THROTTLE_MAGIC, OP_PRINT_PROGRAMS)
 
 long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
 

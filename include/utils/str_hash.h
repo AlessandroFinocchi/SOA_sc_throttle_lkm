@@ -13,7 +13,7 @@ struct string_hash {
 int str_hash_init(struct string_hash **hash);
 int str_hash_add(struct string_hash *hash, char *str);
 bool str_hash_lookup(struct string_hash *hash, char *str);
-void str_hash_del(struct string_hash *hash, char *str);
+int str_hash_del(struct string_hash *hash, char *str);
 void str_hash_cleanup(struct string_hash *hash);
 void str_hash_print(struct string_hash *hash);
 

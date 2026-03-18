@@ -13,5 +13,6 @@ int sc_bitmap_register(struct sc_bitmap *syscalls, unsigned int syscall_nr);
 int sc_bitmap_unregister(struct sc_bitmap *syscalls, unsigned int syscall_nr);
 int sc_bitmap_lookup(struct sc_bitmap *syscalls, unsigned int syscall_nr);
 void sc_bitmap_cleanup(struct sc_bitmap *syscalls);
+void sc_bitmap_print(struct sc_bitmap *syscalls);
 
 #endif

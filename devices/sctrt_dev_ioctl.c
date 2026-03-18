@@ -5,6 +5,8 @@
 #include <linux/capability.h>
 
 #include "sctrt_dev_ioctl.h"
+#include "sctrt_state.h"
+
 
 long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
     struct sc_throttle_param param;
@@ -27,37 +29,40 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
     /* Dispatching comandi */
     switch (cmd) {
         case SC_THROTTLE_SET_STATE: // Accensione/spegnimento monitor
-            // set_monitor_active(param.data.state);
+            if(param.data.new_state == true)
+                sctrt_monitor_enable();
+            else
+                sctrt_monitor_disable();
             break;
 
         case SC_THROTTLE_SET_RATE: // Configurazione soglia MAX
-            // set_max_syscall_rate(param.data.max_rate);
+            sctrt_max_set(param.data.max_rate);
             break;
 
         case SC_THROTTLE_REG_SYS: // Aggiunta syscall
-            // sc_bitmap_register(param.data.syscall_num);
+            ret = sctrt_syscall_register(param.data.syscall_num);
             break;
 
         case SC_THROTTLE_DEREG_SYS: // Rimozione syscall
-            // deregister_syscall(param.data.syscall_num);
+            ret = sctrt_syscall_deregister(param.data.syscall_num);
             break;
 
         case SC_THROTTLE_REG_UID: // Aggiunta nuovo EUID
-            // register_uid(param.data.uid);
+            ret = sctrt_euid_register(param.data.uid);
             break;
 
         case SC_THROTTLE_DEREG_UID: // Rimozione di un EUID
-            // deregister_uid(param.data.uid);
+            ret = sctrt_euid_deregister(param.data.uid);
             break;
 
         case SC_THROTTLE_REG_PROG: // Aggiunta nuovo programma
             param.data.prog_name[MAX_PROG_NAME_LEN - 1] = '\0';
-            // register_prog_name(param.data.prog_name);
+            ret = sctrt_prog_register(param.data.prog_name);
             break;
 
         case SC_THROTTLE_DEREG_PROG: // Rimozione di un programma
             param.data.prog_name[MAX_PROG_NAME_LEN - 1] = '\0';
-            // deregister_prog_name(param.data.prog_name);
+            ret = sctrt_prog_deregister(param.data.prog_name);
             break;
 
         case SC_THROTTLE_GET_TELEM: // Estrazione statistiche
