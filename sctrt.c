@@ -18,21 +18,17 @@ static int sctrt_init(void) {
 	// 	return -1; 	
 	// };
 
-	sctrt_dev_init();
+	// sctrt_dev_init();
 	sctrt_state_init(256);
 	
 	printk("%s: syscall throttler module loaded\n", MODNAME);
-	printk("%s: state before enable: %d\n", MODNAME, sctrt_monitor_is_active());
-	sctrt_monitor_enable();
-	printk("%s: state after enable: %d\n", MODNAME, sctrt_monitor_is_active());
-
 
 	return 0;
 }
 
 static void sctrt_exit(void) {
+	// sctrt_dev_cleanup();
 	sctrt_state_cleanup();
-	sctrt_dev_cleanup();
 	printk("%s: syscall throttler module unloaded\n", MODNAME);
 }
 

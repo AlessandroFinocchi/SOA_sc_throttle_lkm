@@ -5,7 +5,7 @@ MODULE_NAME := euid_module
 obj-m := $(MODULE_NAME).o
 
 # Trova automaticamente tutti i file sorgente .c nelle directory specificate tranne i file main.c
-MODULE_SRCS := main.c euid_hash.c
+MODULE_SRCS := main2.c euid_hash.c
 
 # Converte la lista di sorgenti .c in una lista di oggetti .o
 $(MODULE_NAME)-objs := $(MODULE_SRCS:.c=.o)
