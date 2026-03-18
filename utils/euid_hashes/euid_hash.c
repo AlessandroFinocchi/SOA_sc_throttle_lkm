@@ -16,12 +16,16 @@ static inline u32 hash_euid(kuid_t euid) {
     return __kuid_val(euid);
 }
 
-int euid_hash_init(struct euid_hash *hash) {
+int euid_hash_init(struct euid_hash **hash) {
     if (!hash)
         return -EINVAL;
 
-    spin_lock_init(&hash->lock);
-    hash_init(hash->table);
+    if(!(*hash = kzalloc(sizeof(struct euid_hash), GFP_KERNEL))) {
+        return -ENOMEM;
+    }
+
+    spin_lock_init(&(*hash)->lock);
+    hash_init((*hash)->table);
     return 0;
 }
 
@@ -105,6 +109,8 @@ void euid_hash_cleanup(struct euid_hash *hash) {
     spin_unlock(&hash->lock);
 
     rcu_barrier();
+
+    kfree(hash);
 }
 
 void euid_hash_print(struct euid_hash *hash) {

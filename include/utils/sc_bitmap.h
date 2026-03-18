@@ -8,7 +8,7 @@ struct sc_bitmap {
     unsigned int max_entries;
 };
 
-int sc_bitmap_create(struct sc_bitmap **syscalls, unsigned int max_syscalls);
+int sc_bitmap_init(struct sc_bitmap **syscalls, unsigned int max_syscalls);
 int sc_bitmap_register(struct sc_bitmap *syscalls, unsigned int syscall_nr);
 int sc_bitmap_unregister(struct sc_bitmap *syscalls, unsigned int syscall_nr);
 int sc_bitmap_lookup(struct sc_bitmap *syscalls, unsigned int syscall_nr);

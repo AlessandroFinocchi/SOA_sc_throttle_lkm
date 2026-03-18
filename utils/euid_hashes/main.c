@@ -26,11 +26,7 @@ static int __init euid_demo_init(void)
     if(!d)
         return -ENOMEM;
 
-    d->hash_a = kmalloc(sizeof(struct euid_hash), GFP_KERNEL);
-    if(!d->hash_a)
-        return -ENOMEM;
-
-    ret = euid_hash_init(d->hash_a);
+    ret = euid_hash_init(&d->hash_a);
     if (ret) {
         pr_err("EUID_DEMO: fallito inizializzare hash_a (%d)", ret);
         return ret;
@@ -64,7 +60,6 @@ static int __init euid_demo_init(void)
 static void __exit euid_demo_exit(void)
 {
     euid_hash_cleanup(d->hash_a);
-    kfree(d->hash_a);
     kfree(d);
     pr_info("EUID_DEMO: Modulo terminato e memoria deallocata.");
 }

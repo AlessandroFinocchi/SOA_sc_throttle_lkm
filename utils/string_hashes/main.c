@@ -10,8 +10,8 @@ MODULE_DESCRIPTION("Test di Hash Table concorrente RCU");
 
 #define MODNAME "STR_HASH"
 
-static struct string_hash hash_a;
-static struct string_hash hash_b;
+static struct string_hash *hash_a;
+static struct string_hash *hash_b;
 
 static int __init string_hash_test_init(void) {
     int ret;
@@ -33,22 +33,22 @@ static int __init string_hash_test_init(void) {
     }
 
     /* Test di Inserimento */
-    ret = str_hash_add(&hash_a, "sistema");
+    ret = str_hash_add(hash_a, "sistema");
     if (ret) goto err;
     
-    ret = str_hash_add(&hash_a, "operativo");
+    ret = str_hash_add(hash_a, "operativo");
     if (ret) goto err;
     
-    ret = str_hash_add(&hash_b, "avanzato");
+    ret = str_hash_add(hash_b, "avanzato");
     if (ret) goto err;
 
     /* Test di Ricerca */
-    if (str_hash_lookup(&hash_a, "operativo"))
+    if (str_hash_lookup(hash_a, "operativo"))
         pr_info("STR_DEMO: 'operativo' trovato (CORRETTO).\n");
     else
         pr_err("STR_DEMO Errore: 'operativo' non trovato (ERRORE).\n");
 
-    if (!str_hash_lookup(&hash_a, "kernel"))
+    if (!str_hash_lookup(hash_a, "kernel"))
         pr_info("STR_DEMO: 'kernel' non trovato (CORRETTO).\n");
     else
         pr_err("STR_DEMO: 'kernel' trovato (ERRORE).\n");
@@ -56,9 +56,9 @@ static int __init string_hash_test_init(void) {
 
 
     /* Test di Rimozione */
-    str_hash_del(&hash_a, "sistema");
+    str_hash_del(hash_a, "sistema");
     
-    if (!str_hash_lookup(&hash_a, "sistema"))
+    if (!str_hash_lookup(hash_a, "sistema"))
         pr_info("STR_DEMO: 'sistema' rimosso (CORRETTO).\n");
     else
         pr_err("STR_DEMO: 'sistema' non rimosso (ERRORE).\n");
@@ -67,16 +67,16 @@ static int __init string_hash_test_init(void) {
 
 err:
     pr_err("Errore di allocazione in fase di inizializzazione (%d).\n", ret);
-    str_hash_cleanup(&hash_a);
-    str_hash_cleanup(&hash_b);
+    str_hash_cleanup(hash_a);
+    str_hash_cleanup(hash_b);
     return ret;
 }
 
 static void __exit string_hash_test_exit(void)
 {
     pr_info("STR_DEMO: Scaricamento modulo e deallocazione hash table...\n");
-    str_hash_cleanup(&hash_a);
-    str_hash_cleanup(&hash_b);
+    str_hash_cleanup(hash_a);
+    str_hash_cleanup(hash_b);
     pr_info("STR_DEMO: Modulo scaricato correttamente.\n");
 }
 

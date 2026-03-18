@@ -5,7 +5,7 @@
 
 #include "sc_bitmap.h"
 
-int sc_bitmap_create(struct sc_bitmap **syscalls_ptr, unsigned int max_syscalls) {
+int sc_bitmap_init(struct sc_bitmap **syscalls_ptr, unsigned int max_syscalls) {
     if (!syscalls_ptr)
         return -EINVAL;
 

@@ -19,7 +19,7 @@ static int __init sc_bitmap_test_init(void) {
     pr_info("BITM_DEMO: ------------------------------------------");
     pr_info("BITM_DEMO: Inizializzazione modulo sc_bitmap.\n");
 
-    ret = sc_bitmap_create(&bitm1, 256u);
+    ret = sc_bitmap_init(&bitm1, 256u);
     if (ret) {
         pr_err("BITM_DEMO: fallito inizializzare bitm1 (%d)", ret);
         return ret;
@@ -29,7 +29,7 @@ static int __init sc_bitmap_test_init(void) {
     pr_info("BITM_DEMO: test %p.\n", bitm1);
     pr_info("BITM_DEMO: test %p.\n", bitm1->bitmap);
 
-    ret = sc_bitmap_create(&bitm2, 256u);
+    ret = sc_bitmap_init(&bitm2, 256u);
     if (ret) {
         pr_err("BITM_DEMO: fallito inizializzare bitm2 (%d)", ret);
         return ret;

@@ -11,7 +11,7 @@ struct euid_hash {
     struct hlist_head table[1 << EUID_HASH_BITS];
 };
 
-int euid_hash_init(struct euid_hash *hash);
+int euid_hash_init(struct euid_hash **hash);
 int euid_hash_add(struct euid_hash *hash, kuid_t euid);
 bool euid_hash_lookup(struct euid_hash *hash, kuid_t euid);
 void euid_hash_del(struct euid_hash *hash, kuid_t euid);

@@ -18,12 +18,16 @@ static inline u32 hash_string(char *str) {
     return jhash(str, strlen(str), 0);
 }
 
-int str_hash_init(struct string_hash *hash) {
+int str_hash_init(struct string_hash **hash) {
     if (!hash)
         return -EINVAL;
 
-    spin_lock_init(&hash->lock);
-    hash_init(hash->table);
+    if(!(*hash = kzalloc(sizeof(struct string_hash), GFP_KERNEL))) {
+        return -ENOMEM;
+    }
+
+    spin_lock_init(&(*hash)->lock);
+    hash_init((*hash)->table);
     return 0;
 }
 
@@ -110,6 +114,8 @@ void str_hash_cleanup(struct string_hash *hash) {
     spin_unlock(&hash->lock);
 
     rcu_barrier();
+
+    kfree(hash);
 }
 
 void str_hash_print(struct string_hash *hash) {

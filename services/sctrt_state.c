@@ -24,79 +24,37 @@ int sctrt_state_init(int max_syscalls) {
         goto end;
     }
 
-    // if(!(state->syscalls = kmalloc(sizeof(struct sc_bitmap), GFP_KERNEL))) {
-    //     status = -ENOMEM;
-    //     kfree(state);
-    //     goto end;
-    // }
-
-    if(!(state->programs = kzalloc(sizeof(struct string_hash), GFP_KERNEL))) {
-        status = -ENOMEM;
-        // kfree(state->syscalls);
-        kfree(state);
-        goto end;
+    if ((status = str_hash_init(&state->programs))) {
+        goto delete_state;
     }
 
-    if(!(state->users = kzalloc(sizeof(struct euid_hash), GFP_KERNEL))) {
-        status = -ENOMEM;
-        kfree(state->programs);
-        // kfree(state->syscalls);
-        kfree(state);
-        goto end;
+    if ((status = euid_hash_init(&state->users))) {
+        goto delete_state_programs;
     }
 
-    if ((status = str_hash_init(state->programs))) {
-        kfree(state->users);
-        kfree(state->programs);
-        // kfree(state->syscalls);
-        kfree(state);
-        goto end;
-    }
-
-    if ((status = euid_hash_init(state->users))) {
-        str_hash_cleanup(state->programs);
-        kfree(state->users);
-        kfree(state->programs);
-        // kfree(state->syscalls);
-        kfree(state);
-        goto end;
-    }
-
-    if ((status = sc_bitmap_create(&state->syscalls, max_syscalls))) {
-        euid_hash_cleanup(state->users);
-        str_hash_cleanup(state->programs);
-        kfree(state->users);
-        kfree(state->programs);
-        // kfree(state->syscalls);
-        kfree(state);
-        goto end;
+    if ((status = sc_bitmap_init(&state->syscalls, max_syscalls))) {
+        goto delete_state_programs_users;
     }
 
     state->is_active = false;
     state->MAX = 0;
-
     return 0;
 
+delete_state_programs_users:
+    euid_hash_cleanup(state->users);
+delete_state_programs:
+    str_hash_cleanup(state->programs);
+delete_state:
+    kfree(state);
 end:
     return status;
 }
 
 void sctrt_state_cleanup() {
-    printk("AAAAAAAAA1");
     sc_bitmap_cleanup(state->syscalls);
-    printk("AAAAAAAAA2");
     euid_hash_cleanup(state->users);
-    printk("AAAAAAAAA3");
     str_hash_cleanup(state->programs);
-    printk("AAAAAAAAA4");
-    kfree(state->users);
-    printk("AAAAAAAAA5");
-    kfree(state->programs);
-    printk("AAAAAAAAA6");
-    // kfree(state->syscalls);
-    // printk("AAAAAAAAA7");
     kfree(state);
-    printk("AAAAAAAAA8");
 }
 
 void sctrt_monitor_enable() {
