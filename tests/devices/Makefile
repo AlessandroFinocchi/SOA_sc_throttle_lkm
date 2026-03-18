@@ -1,8 +1,11 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g -I../../include/devices
 
-test_ioctl: test_ioctl.c
+ops: test_ioctl_operations.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+perm: test_ioctl_permissions.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -f test_ioctl
+	rm -f ops perm

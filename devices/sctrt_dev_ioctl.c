@@ -28,6 +28,7 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
 
     /* Dispatching comandi */
     switch (cmd) {
+        /* ============== Write ============== */
         case SC_THROTTLE_SET_STATE: // Accensione/spegnimento monitor
             if(param.data.new_state == true)
                 sctrt_monitor_enable();
@@ -64,9 +65,31 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
             param.data.prog_name[MAX_PROG_NAME_LEN - 1] = '\0';
             ret = sctrt_prog_deregister(param.data.prog_name);
             break;
-
+        
+        /* ============== Write ============== */
         case SC_THROTTLE_GET_TELEM: // Estrazione statistiche
             // get_current_telemetry(&param.data.telemetry);
+            break;
+
+        /* ============== Debug ============== */
+        case SC_THROTTLE_PRINT_STATE: // Log dello stato
+            sctrt_print_state();
+            break;
+
+        case SC_THROTTLE_PRINT_RATE: // Log della soglia MAX
+            sctrt_print_max();
+            break;
+
+        case SC_THROTTLE_PRINT_SYSCS: // Log delle syscalls
+            sctrt_print_syscalls();
+            break;
+
+        case SC_THROTTLE_PRINT_USERS: // Log degli EUID
+            sctrt_print_users();
+            break;
+
+        case SC_THROTTLE_PRINT_PROGS: // Log dei programmi
+            sctrt_print_programs();
             break;
 
         default: // Comando non riconosciuto

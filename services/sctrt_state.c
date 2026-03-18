@@ -109,7 +109,7 @@ void sctrt_print_state() {
 }
 
 void sctrt_print_max() {
-    printk("%s: Configurazion di MAX: %u\n", MODNAME, state->MAX);
+    printk("%s: Configurazione valore di MAX: %u\n", MODNAME, state->MAX);
 }
 
 void sctrt_print_syscalls() {

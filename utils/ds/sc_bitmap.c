@@ -25,8 +25,6 @@ int sc_bitmap_init(struct sc_bitmap **syscalls_ptr, unsigned int max_syscalls) {
 }
 
 int sc_bitmap_register(struct sc_bitmap *syscalls, unsigned int syscall_nr) {
-    printk("BITM_DEMO: %d.\n", syscalls->max_entries);
-
     if (!syscalls || syscall_nr >= syscalls->max_entries) {
         return -EINVAL;
     }

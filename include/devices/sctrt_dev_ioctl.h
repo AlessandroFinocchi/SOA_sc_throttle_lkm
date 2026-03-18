@@ -2,7 +2,14 @@
 #define SCTRT_DEV_IOCTL_H
 
 #include <linux/ioctl.h>
-#include <linux/types.h>
+
+/* Gestione differenziata degli include tra Kernel Space e User Space */
+#ifdef __KERNEL__
+    #include <linux/types.h>
+#else
+    #include <stdbool.h>
+    #include <sys/types.h>
+#endif
 
 #define SC_THROTTLE_MAGIC 'a'
 #define MAX_PROG_NAME_LEN 256
@@ -71,6 +78,9 @@ struct sc_throttle_param {
 #define SC_THROTTLE_PRINT_USERS _IO(SC_THROTTLE_MAGIC, OP_PRINT_USERS)
 #define SC_THROTTLE_PRINT_PROGS _IO(SC_THROTTLE_MAGIC, OP_PRINT_PROGRAMS)
 
+/* Isolamento della firma della funzione di gestione IOCTL */
+#ifdef __KERNEL__
 long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+#endif
 
 #endif

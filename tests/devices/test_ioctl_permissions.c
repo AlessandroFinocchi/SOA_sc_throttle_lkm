@@ -31,7 +31,7 @@ int main() {
     }
 
     // 3. Invocazione della system call ioctl (impostiamo stato ON)
-    param.data.state = 1;
+    param.data.new_state = true;
     if (ioctl(fd, SC_THROTTLE_SET_STATE, &param) < 0) {
         fprintf(stderr, "Errore ioctl: %s\n", strerror(errno));
         close(fd);
