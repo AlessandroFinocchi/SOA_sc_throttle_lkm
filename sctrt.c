@@ -3,6 +3,7 @@
 
 #include <sctrt_dev.h>
 #include <sctrt_state.h>
+#include <sctrt_hook.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Alessandro Finocchi <alessandro.22082001@gmail.it>");
@@ -11,13 +12,15 @@ MODULE_DESCRIPTION("This module intercepts a set of syscall from a set\
 
 static int sctrt_init(void) {
 	sctrt_dev_init();
-	sctrt_state_init(256);	// TODO: SOSTITUIRE CON IL NUMERO DI SYSCALL MASSIMO!
+	sctrt_state_init();
+	sctrt_hook_init();
 	
 	printk("%s: Module loaded\n", MODNAME);
 	return 0;
 }
 
 static void sctrt_exit(void) {
+	sctrt_hook_exit();
 	sctrt_state_cleanup();
 	sctrt_dev_cleanup();
 

@@ -2,17 +2,21 @@
 
 #include "sctrt_hook.h"
 #include "sctrt_state.h"
+#include "sctrt_core.h"
 
 #define target_func "x64_sys_call"
 
 static struct kretprobe retprobe;  
-static struct kretprobe *the_retprobe = &retprobe;  
+// static struct kretprobe *the_retprobe = &retprobe;  
 
-static int pre_hook(struct kprobe *ri, struct pt_regs *the_regs) { 
-	return 0;
+static int pre_hook(struct kprobe *ri, struct pt_regs *the_regs) {
+	if(unlikely(sctrt_check_throttling_compatibility(the_regs)))
+		printk("%s: salve a tuuuuuuuuutti ragazzi", MODNAME);
+
+	return 1;
 }
 
-static int sctrt_hook_init(void) {
+int sctrt_hook_init(void) {
 	int ret;
 
 	retprobe.kp.symbol_name = target_func;
@@ -29,12 +33,9 @@ static int sctrt_hook_init(void) {
 	return 0;
 }
 
-static void sctrt_hook_exit(void) {
+void sctrt_hook_exit(void) {
 	unregister_kretprobe(&retprobe);
 
 	printk("%s: Probes module unloaded\n", MODNAME);
 
 }
-
-static struct kretprobe retprobe;  
-static struct kretprobe *the_retprobe = &retprobe;

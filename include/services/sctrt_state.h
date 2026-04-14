@@ -5,7 +5,17 @@
 
 #define MODNAME "SCTRT"
 
-int sctrt_state_init(int max_syscalls);
+struct sctrt_state {
+    bool is_active;
+    uint MAX;
+    struct sc_bitmap *syscalls;
+    struct string_hash *programs;
+    struct euid_hash *users;
+};
+
+extern struct sctrt_state *state;
+
+int sctrt_state_init(void);
 void sctrt_state_cleanup(void);
 
 void sctrt_monitor_enable(void);

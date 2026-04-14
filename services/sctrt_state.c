@@ -1,24 +1,17 @@
 #include <linux/slab.h>
 #include <linux/errno.h>
+#include <asm/unistd.h> // For __NR_* macros (i.e. __NR_read)
 
 #include "sctrt_state.h"
 #include "sc_bitmap.h"
 #include "euid_hash.h"
 #include "str_hash.h"
 
-struct sctrt_state {
-    bool is_active;
-    uint MAX;
-    struct sc_bitmap *syscalls;
-    struct string_hash *programs;
-    struct euid_hash *users;
-};
-
 struct sctrt_state *state;
 
-
-int sctrt_state_init(int max_syscalls) {
+int sctrt_state_init() {
     int status;
+    uint max_syscalls = __NR_syscalls;
 
     if (!(state = kmalloc(sizeof(struct sctrt_state), GFP_KERNEL))) {
         status = -ENOMEM;
@@ -59,7 +52,7 @@ void sctrt_state_cleanup() {
     kfree(state);
 }
 
-
+/* =============== Write ops. =============== */
 void sctrt_monitor_enable() {
     state->is_active = true;
 }
@@ -103,6 +96,7 @@ int sctrt_prog_deregister(char *prog_name) {
 }
 
 
+/* =============== Read ops. =============== */
 void sctrt_print_state() {
     printk("%s: Stato del monitor: %s\n", MODNAME, 
         sctrt_monitor_is_active() ? "attivo" : "spento");

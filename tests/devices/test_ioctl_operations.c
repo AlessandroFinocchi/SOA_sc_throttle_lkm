@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <string.h>
+#include <asm/unistd.h>        // For __NR_* macros (i.e. __NR_read)
 
 #include "sctrt_dev_ioctl.h"
 
@@ -41,13 +42,13 @@ int main() {
     param.data.max_rate = 100;
     if (ioctl(fd, SC_THROTTLE_SET_RATE, &param) < 0) goto err;
 
-    param.data.syscall_num = 42;
+    param.data.syscall_num = __NR_getpid;
     if (ioctl(fd, SC_THROTTLE_REG_SYS, &param) < 0) goto err;
 
-    param.data.uid = 42;
+    param.data.uid = 1000;
     if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) goto err;
 
-    strncpy(param.data.prog_name, "Io", MAX_PROG_NAME_LEN - 1);
+    strncpy(param.data.prog_name, "probe1", MAX_PROG_NAME_LEN - 1);
     if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
 
     if(print_conf(fd) < 0) goto err;

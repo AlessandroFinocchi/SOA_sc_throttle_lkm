@@ -37,7 +37,7 @@ int euid_hash_add(struct euid_hash *hash, kuid_t euid) {
         return -EINVAL;
 
     if (euid_hash_lookup(hash, euid))
-        return -EEXIST
+        return -EINVAL;
 
     new_node = kmalloc(sizeof(*new_node), GFP_KERNEL);
     if (!new_node)

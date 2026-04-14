@@ -40,7 +40,7 @@ int str_hash_add(struct string_hash *hash, char *new_str) {
         return -EINVAL;
     
     if (str_hash_lookup(hash, new_str))
-        return -EEXIST
+        return -EINVAL;
 
     len = strlen(new_str) + 1;
     // Allocazione in process ctx., usa GFP_ATOMIC se in interrupt ctx.
