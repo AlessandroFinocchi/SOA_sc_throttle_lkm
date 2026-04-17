@@ -1,4 +1,4 @@
-#include <linux/cred.h> // For current macro
+#include <linux/cred.h>       // Fornisce la macro current
 #include <asm/syscall.h>      /* Fornisce syscall_get_nr() */
 
 #include "sctrt_core.h"

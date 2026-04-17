@@ -143,5 +143,6 @@ void str_hash_print(struct string_hash *hash) {
     hash_for_each_rcu(hash->table, bkt, curr, node) {
         pr_info("\t\t - %s", curr->str);
     }
+    pr_cont("\n");
     rcu_read_unlock();
 }
