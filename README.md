@@ -31,4 +31,4 @@ Per maggiori informazioni, vedere [Documentazione Architettura](docs/architectur
 Per maggiori informazioni, vedere [Documentazione Architettura](docs/usage_guide.md)
 
 ## Future works
-1. Pensato per kernel 6.12, estendere il funzionamento dipendentemente dalla versione del kernel.
+1. Pensato per kernel 6.17, estendere il funzionamento dipendentemente dalla versione del kernel. 

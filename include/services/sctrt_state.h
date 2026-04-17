@@ -12,9 +12,6 @@ struct sctrt_state {
     struct sc_bitmap *syscalls;
     struct string_hash *programs;
     struct euid_hash *users;
-
-    /* kprobe state*/
-    struct kprobe** kprobe_ctx_offset;
 };
 
 extern struct sctrt_state *state;

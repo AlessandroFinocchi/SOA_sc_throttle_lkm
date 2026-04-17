@@ -30,10 +30,6 @@ int sctrt_state_init() {
         goto delete_state_programs_users;
     }
 
-    if(!(state->kprobe_ctx_offset = kzalloc(sizeof(struct kprobe*), GFP_KERNEL))) {
-        status = -ENOMEM;
-    }
-
     state->is_active = false;
     state->MAX = 0;
     return 0;
@@ -53,7 +49,6 @@ void sctrt_state_cleanup() {
     sc_bitmap_cleanup(state->syscalls);
     euid_hash_cleanup(state->users);
     str_hash_cleanup(state->programs);
-    kfree(state->kprobe_ctx_offset);
     kfree(state);
 }
 

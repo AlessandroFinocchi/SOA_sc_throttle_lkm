@@ -12,13 +12,13 @@ static struct kprobe sc_probe;
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
 
-		__this_cpu_write(*state->kprobe_ctx_offset, NULL);
+		__this_cpu_write(*kprobe_ctx_offset, NULL);
 		preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 
 		printk("%s: salve a tuuuuuuuuutti ragazzi\n", MODNAME);
 
 		preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
-		__this_cpu_write(*state->kprobe_ctx_offset, p);
+		__this_cpu_write(*kprobe_ctx_offset, p);
     }
     return 0;
 }
@@ -26,11 +26,14 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 int sctrt_hook_init(void) {
 	int ret;
 
-	if(!sctrt_save_probectx())
-		return -1;
-	
-    printk("%s: Discovery finished. Per-CPU offset: %p\n", MODNAME, *state->kprobe_ctx_offset);
+    if(!(kprobe_ctx_offset = kzalloc(sizeof(struct kprobe*), GFP_KERNEL))) {
+        return -ENOMEM;
+	}
 
+	if(!sctrt_save_probectx()) {
+		return -1;
+	}
+	
 	sc_probe.symbol_name = target_func;
 	sc_probe.pre_handler = (kprobe_pre_handler_t)pre_hook; // Eseguita nell'entry point della funzione
 
@@ -46,6 +49,7 @@ int sctrt_hook_init(void) {
 
 void sctrt_hook_exit(void) {
 	unregister_kprobe(&sc_probe);
+    kfree(kprobe_ctx_offset);
 
 	printk("%s: Probes module unloaded\n", MODNAME);
 

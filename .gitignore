@@ -1,1 +1,4 @@
 *.ko
+/tests/devices/ops
+/tests/devices/perm
+/tests/probes/probe1
