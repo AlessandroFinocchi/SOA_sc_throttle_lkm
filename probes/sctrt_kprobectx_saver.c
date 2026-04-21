@@ -8,7 +8,7 @@
 DEFINE_PER_CPU(ulong, per_cpu_var);
 
 static struct kprobe dummy_probe;
-struct kprobe* __percpu * kprobe_ctx_offset;
+struct kprobe** kprobe_ctx_offset;
 
 // Funzione bersaglio isolata. 'noinline' impedisce al compilatore di ottimizzarla.
 // 'asm("")' agisce come barriera, garantendo che il blocco non venga ottimizzato.
