@@ -39,16 +39,25 @@ int main() {
     param.data.new_state = true;
     if (ioctl(fd, SC_THROTTLE_SET_STATE, &param) < 0) goto err;
 
-    param.data.max_rate = 100;
+    param.data.max_rate = 10;
     if (ioctl(fd, SC_THROTTLE_SET_RATE, &param) < 0) goto err;
 
     param.data.syscall_num = __NR_getpid;
     if (ioctl(fd, SC_THROTTLE_REG_SYS, &param) < 0) goto err;
 
+    param.data.syscall_num = __NR_read;
+    if (ioctl(fd, SC_THROTTLE_REG_SYS, &param) < 0) goto err;
+
     param.data.uid = 1000;
     if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) goto err;
 
-    strncpy(param.data.prog_name, "probe1", MAX_PROG_NAME_LEN - 1);
+    param.data.uid = 1001;
+    if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) goto err;
+
+    strncpy(param.data.prog_name, "single", MAX_PROG_NAME_LEN - 1);
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+
+    strncpy(param.data.prog_name, "stress", MAX_PROG_NAME_LEN - 1);
     if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
 
     if(print_conf(fd) < 0) goto err;

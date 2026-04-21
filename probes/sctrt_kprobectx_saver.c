@@ -3,8 +3,8 @@
 #include <linux/preempt.h>
 
 #include "sctrt_kprobectx_saver.h"
-#include "sctrt_hook.h"
-#include "sctrt_state.h"
+
+#include "sctrt_state.h" // For MODNAME
 
 DEFINE_PER_CPU(ulong, per_cpu_var);
 
