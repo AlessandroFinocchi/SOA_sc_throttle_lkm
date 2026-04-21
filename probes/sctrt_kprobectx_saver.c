@@ -2,14 +2,13 @@
 #include <linux/percpu.h>
 #include <linux/preempt.h>
 
+#include "sctrt.h"
 #include "sctrt_kprobectx_saver.h"
-
-#include "sctrt_state.h" // For MODNAME
 
 DEFINE_PER_CPU(ulong, per_cpu_var);
 
 static struct kprobe dummy_probe;
-struct kprobe** kprobe_ctx_offset;
+struct kprobe* __percpu * kprobe_ctx_offset;
 
 // Funzione bersaglio isolata. 'noinline' impedisce al compilatore di ottimizzarla.
 // 'asm("")' agisce come barriera, garantendo che il blocco non venga ottimizzato.
@@ -34,16 +33,15 @@ static int dummy_hook(struct kprobe *p, struct pt_regs *regs) {
 
 
 int sctrt_save_probectx(void) {
-    int ret;
+    int status;
 
     // 1. Inizializzazione e registrazione della dummy kprobe
     dummy_probe.addr = (kprobe_opcode_t *)dummy_target;
     dummy_probe.pre_handler = dummy_hook;
     
-    ret = register_kprobe(&dummy_probe);
-    if (ret < 0) {
-        printk("%s: Dummy probe registration failed: %d\n", MODNAME, ret);
-        return ret;
+    if ((status = register_kprobe(&dummy_probe))) {
+        printk("%s: Dummy probe registration failed: %d\n", MODNAME, status);
+        return status;
     }
 
     // 2. Innesco sincrono: forziamo l'esecuzione della dummy kprobe
@@ -54,9 +52,14 @@ int sctrt_save_probectx(void) {
 
     if (*kprobe_ctx_offset == 0) {
         printk("%s: Critical error. Impossible to compute per-CPU offset.\n", MODNAME);
-        return -EINVAL;
+        status = -EINVAL;
+        goto end;
     }
 
     printk("%s: Discovery finished. Per-CPU offset: %p\n", MODNAME, *kprobe_ctx_offset);
-    return 1;
+    return 0;
+
+
+end:
+    return status;
 }

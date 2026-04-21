@@ -2,6 +2,7 @@
 #include <linux/errno.h>
 #include <asm/unistd.h> // For __NR_* macros (i.e. __NR_read)
 
+#include "sctrt.h"
 #include "sctrt_state.h"
 #include "sc_bitmap.h"
 #include "euid_hash.h"
@@ -98,8 +99,7 @@ int sctrt_prog_deregister(char *prog_name) {
 
 /* =============== Read ops. =============== */
 void sctrt_print_state() {
-    printk("%s: Stato del monitor: %s\n", MODNAME, 
-        sctrt_monitor_is_active() ? "attivo" : "spento");
+    printk("%s: Stato del monitor: %s\n", MODNAME, sctrt_monitor_is_active() ? "attivo" : "spento");
 }
 
 void sctrt_print_max() {

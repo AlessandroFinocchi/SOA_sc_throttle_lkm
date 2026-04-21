@@ -3,6 +3,7 @@
 #include <linux/err.h>
 #include <linux/cdev.h>
 
+#include "sctrt.h"
 #include "sctrt_dev.h"
 #include "sctrt_dev_ioctl.h"
 
@@ -38,7 +39,7 @@ int sctrt_dev_init(void) {
 	status = alloc_chrdev_region(&device.dev, 0, 1, DEVICE_NAME);
 #endif
 	if (status) {
-		pr_err("%s - Error reserving the region of device numbers\n", DEVICE_NAME);
+		printk("%s: %s - Error reserving the region of device numbers\n", MODNAME, DEVICE_NAME);
 		return status;
 	}
 
@@ -46,14 +47,15 @@ int sctrt_dev_init(void) {
 	device.cdev.owner = THIS_MODULE;
 
 	if ((status = cdev_add(&device.cdev, device.dev, 1))) {
-		pr_err("%s - Error adding cdev\n", DEVICE_NAME);
+		printk("%s: %s - Error adding cdev\n", MODNAME, DEVICE_NAME);
 		goto free_dev;
 	}
 
-	pr_info("%s - Registered a character device for Major %d starting with Minor %d\n", DEVICE_NAME, MAJOR(device.dev), MINOR(device.dev));
+	printk("%s: %s - Registered a character device for Major %d starting with Minor %d\n", 
+		MODNAME, DEVICE_NAME, MAJOR(device.dev), MINOR(device.dev));
 
 	if (!(device.class = class_create(DEVICE_CLASS))) {
-		pr_err("%s - Could not create class %s\n", DEVICE_NAME, DEVICE_CLASS);
+		printk("%s: %s - Could not create class %s\n", MODNAME, DEVICE_NAME, DEVICE_CLASS);
 		status = ENOMEM;
 		goto delete_cdev;
 	}
@@ -61,12 +63,12 @@ int sctrt_dev_init(void) {
 	device.class->devnode = devnode_mode;
 
 	if (!(device_create(device.class, NULL, device.dev, NULL, "%s", DEVICE_NAME))) {
-		pr_err("%s - Could not create device %s\n", DEVICE_NAME, DEVICE_NAME);
+		printk("%s: %s - Could not create device %s\n", MODNAME, DEVICE_NAME, DEVICE_NAME);
 		status = ENOMEM;
 		goto delete_class;
 	}
 
-	pr_info("%s - Created device\n", DEVICE_NAME);
+	printk("%s: %s - Created device\n", MODNAME, DEVICE_NAME);
 
 	return 0;
 

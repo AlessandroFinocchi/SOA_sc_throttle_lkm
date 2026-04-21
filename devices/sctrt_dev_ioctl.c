@@ -4,6 +4,7 @@
 #include <linux/cred.h>
 #include <linux/capability.h>
 
+#include "sctrt.h"
 #include "sctrt_dev_ioctl.h"
 #include "sctrt_state.h"
 

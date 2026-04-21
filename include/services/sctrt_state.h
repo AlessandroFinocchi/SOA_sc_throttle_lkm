@@ -3,8 +3,6 @@
 
 #include <linux/types.h>
 
-#define MODNAME "SCTRT"
-
 struct sctrt_state {
     /* Monitor state */
     bool is_active;

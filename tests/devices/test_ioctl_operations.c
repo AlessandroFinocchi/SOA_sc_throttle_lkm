@@ -45,9 +45,6 @@ int main() {
     param.data.syscall_num = __NR_getpid;
     if (ioctl(fd, SC_THROTTLE_REG_SYS, &param) < 0) goto err;
 
-    param.data.syscall_num = __NR_read;
-    if (ioctl(fd, SC_THROTTLE_REG_SYS, &param) < 0) goto err;
-
     param.data.uid = 1000;
     if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) goto err;
 
