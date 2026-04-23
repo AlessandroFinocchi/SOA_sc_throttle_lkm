@@ -33,8 +33,7 @@ static struct timer_list tb_timer;
  * Viene eseguito in contesto SoftIRQ. Effettua il refill atomico e riarma
  * se stesso per il tick corrispondente a 1 secondo nel futuro.
  */
-static void tb_timer_callback(struct timer_list *t)
-{
+static void tb_timer_callback(struct timer_list *t) {
     /* Refill dei token */
     atomic_set(&tb_tokens, atomic_read(&tb_max_tokens));
     
@@ -65,6 +64,10 @@ void token_bucket_set_max(uint new_max) {
     printk("%s: token-bucket - MAX tokens updated to %u\n", MODNAME, new_max);
 }
 
+uint token_bucket_get_max(void) {
+    return atomic_read(&tb_max_tokens);
+}
+
 int token_bucket_init(uint max_tokens) {
     if (max_tokens == 0)
         return -EINVAL;
@@ -82,7 +85,7 @@ int token_bucket_init(uint max_tokens) {
     /* Avvia il timer schedulandolo tra esattamente 1 secondo (HZ tick) */
     mod_timer(&tb_timer, jiffies + HZ);
     
-    printk("%s: token-bucket - Initialized with MAX=%d and tau=1s\n", MODNAME, max_tokens);
+    printk("%s: token-bucket - Initialized with MAX=%d and \xcf\x84 = 1s\n", MODNAME, max_tokens);
     return 0;
 }
 

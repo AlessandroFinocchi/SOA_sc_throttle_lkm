@@ -6,7 +6,6 @@
 struct sctrt_state {
     /* Monitor state */
     bool is_active;
-    uint MAX;
     struct sc_bitmap *syscalls;
     struct string_hash *programs;
     struct euid_hash *users;

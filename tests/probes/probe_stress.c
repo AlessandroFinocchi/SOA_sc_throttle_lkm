@@ -9,14 +9,19 @@
 
 int main() {
     int uid;
-    float milliseconds = 500;
+    int ms_sleep = 1000;
+    // int duration = 1 * 60 * 1000 / ms_sleep; /* il programma dura 1 minuto */
+    int duration = 10 * 1000 / ms_sleep; /* il programma dura 10 secondi */
     struct timespec ts;
-    ts.tv_sec = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000L;
+    
+    ts.tv_sec = ms_sleep / 1000;
+    ts.tv_nsec = (ms_sleep % 1000) * 1000000L;
 
-    for (int i = 0; i < 1200; i++) {
+    for (int i = 0; i < duration; i++) {
         uid = getpid();
         printf("%d\n", uid);
         nanosleep(&ts, NULL);
     }
+
+    printf("%ld\n", ts.tv_nsec);
 }

@@ -39,7 +39,7 @@ int main() {
     param.data.new_state = true;
     if (ioctl(fd, SC_THROTTLE_SET_STATE, &param) < 0) goto err;
 
-    param.data.max_rate = 10;
+    param.data.max_rate = 3;
     if (ioctl(fd, SC_THROTTLE_SET_RATE, &param) < 0) goto err;
 
     param.data.syscall_num = __NR_getpid;

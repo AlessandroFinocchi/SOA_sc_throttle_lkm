@@ -5,6 +5,7 @@
 #include "sctrt.h"
 #include "sctrt_state.h"
 #include "sctrt_hook.h"
+#include "sctrt_tb.h"
 #include "sc_bitmap.h"
 #include "euid_hash.h"
 #include "str_hash.h"
@@ -33,7 +34,6 @@ int sctrt_state_init() {
     }
 
     state->is_active = false;
-    state->MAX = 10;
     return 0;
 
 delete_state_programs_users:
@@ -93,8 +93,8 @@ void sctrt_monitor_disable() {
     }
 }
 
-void sctrt_set_max(uint max) {
-    state->MAX = max;
+void sctrt_set_max(uint new_max) {
+    token_bucket_set_max(new_max);
 }
 
 int sctrt_syscall_register(int syscall_nr) {
@@ -130,7 +130,7 @@ void sctrt_print_state() {
 }
 
 void sctrt_print_max() {
-    printk("%s: MAX value: %u\n", MODNAME, state->MAX);
+    printk("%s: MAX value: %u\n", MODNAME, token_bucket_get_max());
 }
 
 void sctrt_print_syscalls() {

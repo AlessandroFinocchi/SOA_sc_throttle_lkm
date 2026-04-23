@@ -8,6 +8,7 @@ extern atomic_t tb_tokens;
 int token_bucket_init(uint max_tokens);
 void token_bucket_exit(void);
 void token_bucket_set_max(uint new_max);
+uint token_bucket_get_max(void);
 
 /**
  * take_token() - Tenta di prelevare un token dal bucket.
