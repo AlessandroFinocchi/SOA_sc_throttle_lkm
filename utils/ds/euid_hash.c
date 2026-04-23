@@ -135,7 +135,7 @@ void euid_hash_print(struct euid_hash *hash) {
         return;
 
     rcu_read_lock();
-    pr_info("EUID_HASH: EUID registrati:");
+    pr_info("EUID_HASH: registered EUIDs:");
     hash_for_each_rcu(hash->table, bkt, curr, node) {
         pr_cont(" %u", __kuid_val(curr->euid));
     }

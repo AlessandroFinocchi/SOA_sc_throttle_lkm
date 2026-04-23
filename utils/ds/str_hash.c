@@ -139,7 +139,7 @@ void str_hash_print(struct string_hash *hash) {
         return;
 
     rcu_read_lock();
-    pr_info("STR_HASH: Programmi registrati:");
+    pr_info("STR_HASH: Registered programs:");
     hash_for_each_rcu(hash->table, bkt, curr, node) {
         pr_info("\t\t - %s", curr->str);
     }

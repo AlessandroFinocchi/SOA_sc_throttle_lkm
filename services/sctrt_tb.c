@@ -43,7 +43,10 @@ static void tb_timer_callback(struct timer_list *t)
      * HZ è una costante architetturale (1000) che rappresenta
      * il numero di tick in esattamente 1 secondo.
      */
-    mod_timer(&tb_timer, jiffies + HZ);
+    mod_timer(&tb_timer, jiffies + 4 * HZ);
+
+    printk("%s: token-bucket - Token refill\n", MODNAME);
+
 }
 
 /**
@@ -54,12 +57,12 @@ static void tb_timer_callback(struct timer_list *t)
  */
 void token_bucket_set_max(uint new_max) {
     if (new_max == 0) {
-        printk("%s: Token bucket sub-module: attempted to set max_tokens to 0\n", MODNAME);
+        printk("%s: token-bucket - Attempted to set max_tokens to 0\n", MODNAME);
         return;
     }
     
     atomic_set(&tb_max_tokens, new_max);
-    printk("%s: Token bucket sub-module: MAX tokens updated to %u\n", MODNAME, new_max);
+    printk("%s: token-bucket - MAX tokens updated to %u\n", MODNAME, new_max);
 }
 
 int token_bucket_init(uint max_tokens) {
@@ -79,7 +82,7 @@ int token_bucket_init(uint max_tokens) {
     /* Avvia il timer schedulandolo tra esattamente 1 secondo (HZ tick) */
     mod_timer(&tb_timer, jiffies + HZ);
     
-    printk("%s: Token bucket sub-module: initialized with MAX=%d and tau=1s\n", MODNAME, max_tokens);
+    printk("%s: token-bucket - Initialized with MAX=%d and tau=1s\n", MODNAME, max_tokens);
     return 0;
 }
 
@@ -91,5 +94,5 @@ void token_bucket_exit(void) {
      * SoftIRQ concorrente su un'altra CPU. Evita kernel panic durante l'unload.
      */
     timer_delete_sync(&tb_timer);
-    pr_info("%s: Token bucket sub-module: terminated and exited\n", MODNAME);
+    printk("%s: token-bucket - Terminated and exited\n", MODNAME);
 }

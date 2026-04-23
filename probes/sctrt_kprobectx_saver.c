@@ -40,7 +40,7 @@ int sctrt_save_probectx(void) {
     dummy_probe.pre_handler = dummy_hook;
     
     if ((status = register_kprobe(&dummy_probe))) {
-        printk("%s: Dummy probe registration failed: %d\n", MODNAME, status);
+        printk("%s: probes - Dummy probe registration failed: %d\n", MODNAME, status);
         return status;
     }
 
@@ -51,12 +51,12 @@ int sctrt_save_probectx(void) {
     unregister_kprobe(&dummy_probe);
 
     if (*kprobe_ctx_offset == 0) {
-        printk("%s: Critical error. Impossible to compute per-CPU offset.\n", MODNAME);
+        printk("%s: probes - Critical error. Impossible to compute probes context offset.\n", MODNAME);
         status = -EINVAL;
         goto end;
     }
 
-    printk("%s: Discovery finished. Per-CPU offset: %p\n", MODNAME, *kprobe_ctx_offset);
+    printk("%s: probes - Probes context discovery finished. Per-CPU offset: %p\n", MODNAME, *kprobe_ctx_offset);
     return 0;
 
 

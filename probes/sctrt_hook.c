@@ -29,30 +29,32 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 
 int sctrt_hook_init(void) {
 	int status;
-
-	// if(!token_bucket_init())
-	// 	return -1;
+	if((status = token_bucket_init(10))){
+		goto end;
+	}
 	
-	sc_probe = (struct kprobe){0}; // reset of all members to 0 for re-initializations
+	sc_probe = (struct kprobe){0}; // Reset di tutti gli elementi a 0 per reinizializzazioni
 	sc_probe.symbol_name = target_func;
 	sc_probe.pre_handler = (kprobe_pre_handler_t)pre_hook; // Eseguita nell'entry point della funzione
 
 	if ((status = register_kprobe(&sc_probe))) {
-		printk("%s: Probes module initialization failed, returned %d\n", MODNAME, status);
-		goto end;
+		printk("%s: probes - Initialization failed, returned %d\n", MODNAME, status);
+		goto clean_tb;
 	}
 
-	printk("%s: Probes module correctly loaded\n", MODNAME);
+	printk("%s: probes - Correctly loaded\n", MODNAME);
 	
 	return 0;
 
-
+clean_tb:
+	token_bucket_exit();
 end:
     return status;
 }
 
 void sctrt_hook_exit(void) {
 	unregister_kprobe(&sc_probe);
+	token_bucket_exit();
 
-	printk("%s: Probes module unloaded\n", MODNAME);
+	printk("%s: probes - Correctly unloaded\n", MODNAME);
 }

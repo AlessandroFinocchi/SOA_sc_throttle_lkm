@@ -33,7 +33,7 @@ int sctrt_state_init() {
     }
 
     state->is_active = false;
-    state->MAX = 0;
+    state->MAX = 10;
     return 0;
 
 delete_state_programs_users:
@@ -53,6 +53,7 @@ void sctrt_state_cleanup() {
     str_hash_cleanup(state->programs);
     kfree(state);
 }
+
 
 /* ============== Control ops. ============== */
 bool sctrt_is_monitor_active() {
@@ -125,11 +126,11 @@ int sctrt_prog_deregister(char *prog_name) {
 
 /* =============== Read ops. =============== */
 void sctrt_print_state() {
-    printk("%s: Stato del monitor: %s\n", MODNAME, sctrt_is_monitor_active() ? "attivo" : "spento");
+    printk("%s: Monitor state: %s\n", MODNAME, sctrt_is_monitor_active() ? "on" : "off");
 }
 
 void sctrt_print_max() {
-    printk("%s: Configurazione valore di MAX: %u\n", MODNAME, state->MAX);
+    printk("%s: MAX value: %u\n", MODNAME, state->MAX);
 }
 
 void sctrt_print_syscalls() {
