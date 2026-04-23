@@ -38,7 +38,7 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
             break;
 
         case SC_THROTTLE_SET_RATE: // Configurazione soglia MAX
-            sctrt_max_set(param.data.max_rate);
+            sctrt_set_max(param.data.max_rate);
             break;
 
         case SC_THROTTLE_REG_SYS: // Aggiunta syscall

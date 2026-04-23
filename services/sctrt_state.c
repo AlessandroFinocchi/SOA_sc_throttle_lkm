@@ -53,6 +53,24 @@ void sctrt_state_cleanup() {
     kfree(state);
 }
 
+/* ============== Control ops. ============== */
+bool sctrt_is_monitor_active() {
+    return state->is_active;
+}
+
+bool sctrt_is_syscall_registered(long syscall_nr) {
+    return sc_bitmap_lookup(state->syscalls, syscall_nr);
+}
+
+bool sctrt_is_prog_registered(char *prog_name) {
+    return str_hash_lookup(state->programs, prog_name);
+}
+
+bool sctrt_is_euid_registered(kuid_t euid) {
+    return euid_hash_lookup(state->users, euid);
+}
+
+
 /* =============== Write ops. =============== */
 void sctrt_monitor_enable() {
     state->is_active = true;
@@ -62,11 +80,7 @@ void sctrt_monitor_disable() {
     state->is_active = false;
 }
 
-bool sctrt_monitor_is_active() {
-    return state->is_active;
-}
-
-void sctrt_max_set(unsigned int max) {
+void sctrt_set_max(uint max) {
     state->MAX = max;
 }
 
@@ -99,7 +113,7 @@ int sctrt_prog_deregister(char *prog_name) {
 
 /* =============== Read ops. =============== */
 void sctrt_print_state() {
-    printk("%s: Stato del monitor: %s\n", MODNAME, sctrt_monitor_is_active() ? "attivo" : "spento");
+    printk("%s: Stato del monitor: %s\n", MODNAME, sctrt_is_monitor_active() ? "attivo" : "spento");
 }
 
 void sctrt_print_max() {

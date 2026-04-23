@@ -3,10 +3,8 @@
 #include "sctrt.h"
 #include "sctrt_hook.h"
 #include "sctrt_kprobectx_saver.h"
-#include "sctrt_state.h"
 #include "sctrt_core.h"
 #include "sctrt_tb.h"
-
 
 #define target_func "x64_sys_call"
 
