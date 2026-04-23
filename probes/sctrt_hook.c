@@ -15,7 +15,6 @@ void thread_migration_fn(void);
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
 		// if(!take_token()) {
-			pr_info("Entrata: Kprobe '%s' in esecuzione sulla CPU %u\n", p->symbol_name, smp_processor_id());
 			__this_cpu_write(*kprobe_ctx_offset, NULL);
 			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 
@@ -23,7 +22,6 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);
-			pr_info("Uscita: Kprobe '%s' in esecuzione sulla CPU %u\n", p->symbol_name, smp_processor_id());
 		// }
     }
     return 0;
@@ -34,11 +32,8 @@ int sctrt_hook_init(void) {
 
 	// if(!token_bucket_init())
 	// 	return -1;
-
-	if((status = sctrt_save_probectx())) {
-		goto end;
-	}
 	
+	sc_probe = (struct kprobe){0}; // reset of all members to 0 for re-initializations
 	sc_probe.symbol_name = target_func;
 	sc_probe.pre_handler = (kprobe_pre_handler_t)pre_hook; // Eseguita nell'entry point della funzione
 

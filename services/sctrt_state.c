@@ -4,6 +4,7 @@
 
 #include "sctrt.h"
 #include "sctrt_state.h"
+#include "sctrt_hook.h"
 #include "sc_bitmap.h"
 #include "euid_hash.h"
 #include "str_hash.h"
@@ -72,12 +73,23 @@ bool sctrt_is_euid_registered(kuid_t euid) {
 
 
 /* =============== Write ops. =============== */
-void sctrt_monitor_enable() {
-    state->is_active = true;
+int sctrt_monitor_enable() {
+    int status;
+
+    if(!sctrt_is_monitor_active()){
+        if((status = sctrt_hook_init()))
+            return status;
+        state->is_active = true;
+    }
+
+    return 0;
 }
 
 void sctrt_monitor_disable() {
-    state->is_active = false;
+    if(sctrt_is_monitor_active()){
+        sctrt_hook_exit();
+        state->is_active = false;
+    }
 }
 
 void sctrt_set_max(uint max) {

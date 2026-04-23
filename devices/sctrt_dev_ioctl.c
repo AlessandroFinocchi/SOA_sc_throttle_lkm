@@ -29,10 +29,10 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
 
     /* Dispatching comandi */
     switch (cmd) {
-        /* ============== Write ============== */
-        case SC_THROTTLE_SET_STATE: // Accensione/spegnimento monitor
+        /* =================== Write =================== */
+        case SC_THROTTLE_SET_STATE: // Monitor on/off
             if(param.data.new_state == true)
-                sctrt_monitor_enable();
+                ret = sctrt_monitor_enable();
             else
                 sctrt_monitor_disable();
             break;
@@ -67,12 +67,12 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
             ret = sctrt_prog_deregister(param.data.prog_name);
             break;
         
-        /* ============== Write ============== */
+        /* =================== Read =================== */
         case SC_THROTTLE_GET_TELEM: // Estrazione statistiche
             // get_current_telemetry(&param.data.telemetry);
             break;
 
-        /* ============== Debug ============== */
+        /* =================== Debug =================== */
         case SC_THROTTLE_PRINT_STATE: // Log dello stato
             sctrt_print_state();
             break;

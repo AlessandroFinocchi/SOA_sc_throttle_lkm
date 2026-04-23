@@ -16,8 +16,7 @@ extern struct sctrt_state *state;
 
 int sctrt_state_init(void);
 void sctrt_state_cleanup(void);
-
-void sctrt_monitor_enable(void);
+int sctrt_monitor_enable(void);
 void sctrt_monitor_disable(void);
 bool sctrt_is_monitor_active(void);
 void sctrt_print_state(void);
