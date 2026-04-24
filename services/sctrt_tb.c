@@ -6,6 +6,7 @@
 
 #include "sctrt.h"
 #include "sctrt_tb.h"
+#include "sctrt_core.h"
 
 
 /** 
@@ -46,6 +47,7 @@ static void tb_timer_callback(struct timer_list *t) {
 
     printk("%s: token-bucket - Token refill\n", MODNAME);
 
+    sctrt_wake_up_weq();
 }
 
 /**
@@ -62,6 +64,8 @@ void token_bucket_set_max(uint new_max) {
     
     atomic_set(&tb_max_tokens, new_max);
     printk("%s: token-bucket - MAX tokens updated to %u\n", MODNAME, new_max);
+
+    sctrt_wake_up_weq();
 }
 
 uint token_bucket_get_max(void) {
@@ -75,7 +79,7 @@ int token_bucket_init(uint max_tokens) {
     atomic_set(&tb_max_tokens, max_tokens);
     atomic_set(&tb_tokens, max_tokens);
     
-    /** 
+    /*
      * timer_setup() collega la struttura timer_list alla funzione di callback.
      * Il terzo parametro è riservato a flag opzionali (es. TIMER_DEFERRABLE),
      * che qui omettiamo passando 0.
@@ -83,7 +87,7 @@ int token_bucket_init(uint max_tokens) {
     timer_setup(&tb_timer, tb_timer_callback, 0);
     
     /* Avvia il timer schedulandolo tra esattamente 1 secondo (HZ tick) */
-    mod_timer(&tb_timer, jiffies + HZ);
+    mod_timer(&tb_timer, jiffies + 1 * HZ);
     
     printk("%s: token-bucket - Initialized with MAX=%d and \xcf\x84 = 1s\n", MODNAME, max_tokens);
     return 0;

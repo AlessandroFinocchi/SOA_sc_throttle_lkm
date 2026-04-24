@@ -14,15 +14,17 @@ void thread_migration_fn(void);
 
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
-		if(take_token()) {
+		if(!take_token()) {
 			__this_cpu_write(*kprobe_ctx_offset, NULL);
 			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 
-			printk("%s: salve a tuuuuuuuuutti ragazzi\n", MODNAME);
+			sctrt_wait_on_weq();
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);
 		}
+		else
+			printk("%s: salve a tuuuuuuuuutti ragazzi\n", MODNAME);
     }
     return 0;
 }

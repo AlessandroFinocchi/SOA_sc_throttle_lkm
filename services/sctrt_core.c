@@ -1,8 +1,24 @@
 #include <linux/cred.h>       // Fornisce la macro current
-#include <asm/syscall.h>      /* Fornisce syscall_get_nr() */
+#include <asm/syscall.h>      // Fornisce syscall_get_nr()
+#include <linux/wait.h>       // Fornisce wait_queue_head_t
 
 #include "sctrt_core.h"
 #include "sctrt_state.h"
+#include "sctrt_tb.h"
+
+wait_queue_head_t sctrt_weq;
+
+void sctrt_core_init() {
+    init_waitqueue_head(&sctrt_weq);
+}
+
+void sctrt_core_exit() {
+    /*
+     * Non dovrebbe servire perchè quando il monitor si spegne, si
+     * risvegliano tutti i thread, ma per correttezza viene mantenuta.
+     */
+    sctrt_wake_up_weq();
+}
 
 bool sctrt_check_throttling_compatibility(struct pt_regs *regs) {
     long syscall_nr;
@@ -29,4 +45,25 @@ bool sctrt_check_throttling_compatibility(struct pt_regs *regs) {
     }
 
     return true;
+}
+
+void sctrt_wait_on_weq() {
+    /*
+     * Sospensione del thread, che non è riuscito ad ottenere un token.
+     * La condizione viene rivalutata al risveglio.
+     * Il risveglio avviene se il monitor non è più attivo, e quindi
+     * il meccanismo di throttling deve farmarsi, oppure se al
+     * risveglio si riesce a prendere un token.
+     */
+    wait_event_interruptible(
+        sctrt_weq,
+        !sctrt_is_monitor_active() || take_token()
+    );
+}
+
+void sctrt_wake_up_weq() {
+    /*
+     * Svuota la wait queue: risveglia tutti i thread pendenti.
+     */
+    wake_up_interruptible_all(&sctrt_weq);
 }

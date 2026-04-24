@@ -9,9 +9,9 @@
 
 int main() {
     int uid;
-    int ms_sleep = 1000;
-    // int duration = 1 * 60 * 1000 / ms_sleep; /* il programma dura 1 minuto */
-    int duration = 10 * 1000 / ms_sleep; /* il programma dura 10 secondi */
+    int ms_sleep = 50;
+    // int duration = 1 * 60 * 1000 / ms_sleep; /* il programma rimane sveglio 1 minuto */
+    int duration = 10 * 1000 / ms_sleep; /* il programma rimane sveglio 10 secondi */
     struct timespec ts;
     
     ts.tv_sec = ms_sleep / 1000;

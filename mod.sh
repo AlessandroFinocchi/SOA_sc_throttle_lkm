@@ -11,6 +11,8 @@ ACTION=$2
 # 2. Struttura di controllo principale
 case "$ACTION" in
     "ins")
+        sudo dmesg -C
+
         echo "[+] Inserimento del modulo nel kernel: $MODULE"
         sudo insmod "$MODULE.ko"
 
@@ -19,6 +21,8 @@ case "$ACTION" in
         else
             echo "Errore durante l'inserimento. Verificare tramite 'dmesg | tail'."
         fi
+
+        sudo dmesg -w
         ;;
 
     "rm")
