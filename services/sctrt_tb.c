@@ -7,6 +7,7 @@
 #include "sctrt.h"
 #include "sctrt_tb.h"
 #include "sctrt_core.h"
+#include "sctrt_profiler.h"
 
 
 /** 
@@ -37,13 +38,15 @@ static struct timer_list tb_timer;
 static void tb_timer_callback(struct timer_list *t) {
     /* Refill dei token */
     atomic_set(&tb_tokens, atomic_read(&tb_max_tokens));
+
+    sctrt_profiler_sample_window();
     
     /* * Riarmo del timer:
      * jiffies rappresenta il tempo corrente.
      * HZ è una costante architetturale (1000) che rappresenta
      * il numero di tick in esattamente 1 secondo.
      */
-    mod_timer(&tb_timer, jiffies + 4 * HZ);
+    mod_timer(&tb_timer, jiffies + 1 * HZ);
 
     printk("%s: token-bucket - Token refill\n", MODNAME);
 

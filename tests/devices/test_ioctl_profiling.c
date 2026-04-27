@@ -35,34 +35,38 @@ int main() {
 
     if(print_conf(fd) < 0) goto err;
     
-    // 3. Invocazione della system call ioctl (impostiamo stato ON)
-    param.data.new_state = true;
-    if (ioctl(fd, SC_THROTTLE_SET_STATE, &param) < 0) goto err;
-    printf("a");
+    // 3. Invocazione della system call ioctl
+    for(int i = 0; i < 20; i++) {
+        if (ioctl(fd, SC_THROTTLE_GET_METRICS, &param) < 0) {
+            fprintf(stderr, "Errore durante l'operazione ioctl (SC_THROTTLE_GET_TELEM): %s\n", strerror(errno));
+            close(fd);
+            return EXIT_FAILURE;
+        }
 
-    param.data.max_rate = 3;
-    if (ioctl(fd, SC_THROTTLE_SET_RATE, &param) < 0) goto err;
-    printf("a");
+        // 4. Stampa formattata delle metriche acquisite
+        printf("==============================================\n");
+        printf("      PROFILAZIONE SOTTOSISTEMA THROTTLING    \n");
+        printf("==============================================\n");
+        // printf("Ritardo massimo registrato:   %lu ns\n", param.data.telemetry.peak_delay_ns);
+        
+        // /* Gestione condizionale dell'output per evitare letture inconsistenti su dati non ancora campionati */
+        // if (param.data.telemetry.peak_delay_ns > 0) {
+        //     printf("Eseguibile resp. del picco:   %s\n", param.data.telemetry.peak_prog_name);
+        //     printf("EUID resp. del picco:         %u\n", param.data.telemetry.peak_uid);
+        // } else {
+        //     printf("Eseguibile resp. del picco:   N/A (Nessun throttling effettuato)\n");
+        //     printf("EUID resp. del picco:         N/A\n");
+        // }
+        
+        printf("--------------------------------------------------\n");
+        printf("Picco thread bloccati/sec:    %u\n", param.data.profiler.peak_blocked_threads);
+        printf("Totale thread bloccati   :    %lu\n", param.data.profiler.sum_blocked_threads);
+        printf("Totale thread campioni   :    %u\n", param.data.profiler.total_samples);    
+        printf("==================================================\n");
+        
+        sleep(1);
+    }
 
-    param.data.syscall_num = __NR_getpid;
-    if (ioctl(fd, SC_THROTTLE_REG_SYS, &param) < 0) goto err;
-    printf("a");
-
-    param.data.uid = 1000;
-    if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) goto err;
-    printf("a");
-
-    param.data.uid = 1001;
-    if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) goto err;
-    printf("a");
-
-    strncpy(param.data.prog_name, "single", MAX_PROG_NAME_LEN - 1);
-    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
-    printf("a");
-
-    strncpy(param.data.prog_name, "stress", MAX_PROG_NAME_LEN - 1);
-    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
-    printf("a");
 
     if(print_conf(fd) < 0) goto err;
 

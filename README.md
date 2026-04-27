@@ -2,33 +2,36 @@
 
 ## Specifica
 
-In questa repository è present un Linux Kernel Module per implementare un meccanismo di system call throttling. L'LKM deve offrire un device driver per supportare la (de)registrazione di:
+Questa repository contiene un Linux Kernel Module (LKM) progettato per implementare un meccanismo di *system call throttling*. Il modulo espone un device driver che consente la registrazione e deregistrazione di:
 - **Nomi di programmi** (eseguibili)
 - **User ID** (effective)
 - **Syscall numbers** (in accordo alla specifica x86_64)
 
-I syscall numbers sono usati per indicare system call critiche sotto il punto di vista di scalabilità, performance o sicurezza.<br>
-Ogni volta che una syscall registrata è invocata da un programma o un utente registrato nel device driver, la reale esecuzione è controllata da un **monitor** offerto dall'LKM.
-<br>
-L'LKM può essere configurato per indicare il massimo numero *MAX*, per le syscall registrate, che possono essere invocate in una **finestra temporale** di 1 secondo da un programma/utente registrato. Se il numero di invocazioni nella finestra supera *MAX*, il thread coinvolto deve essere bloccato, prevenendo l'effettiva invocazione.
-<br>
-Le system call possono essere di qualsiasi **natura**, bloccante o meno.
-<br>
-Il device driver deve permettere ad ogni istante di tempo di verificare i programmi, utenti, e syscall numbers registrati. Inoltre, l'aggiornamento di queste informazioni può avvenire soltanto da parte di un thread che esegue con effective UserID pari a 0 (root).
-<br>
-Il device driver deve supportare la possibilità di **accendere/spegnere** il monitor delle syscall. Quando il monitor è spento, non c'è limite alla frequenza di invocazione delle syscall registrate.
-<br>
-In più, sulla base del valore di *MAX* selezionato, il device driver deve anche mettere a disposizione dati riguardanti:
-- Il **massimo delay** per l'esecuzione effettiva di una syscall invocata, con il corrispondente programma e user ID
-- Il **numero massimo** e **medio** di thread che sono stati bloccati
+I syscall numbers sono usati per tracciare system call considerate critiche in termini di scalabilità, performance o sicurezza.<br>
 
-Della repository fanno parte anche il codice user-level per configurare l'LKM e per testare il corretto funzionamento del software sviluppato.
+Ogni volta che una syscall registrata viene invocata da un programma o da un utente monitorato dal device driver, la sua effettiva esecuzione è subordinata al controllo di un **monitor** interno all'LKM.
+
+### Funzionamento del Monitor
+
+L'LKM può essere configurato con un parametro *MAX*, che rappresenta il numero massimo di invocazioni consentite per le syscall registrate all'interno di una **finestra temporale di 1 secondo**. Se il numero di chiamate all'interno di tale finestra supera la soglia *MAX* per un dato programma/utente monitorato, il thread chiamante viene sospeso temporaneamente, ritardandone o bloccandone l'esecuzione. Le system call monitorate possono essere di qualsiasi natura (bloccanti o non bloccanti).
+
+Il monitor può essere **attivato o disattivato** dinamicamente: quando è disabilitato, non viene imposto alcun limite al tasso di invocazione delle syscall registrate.
+
+### Sicurezza e Metriche
+
+Il device driver garantisce che l'aggiornamento della configurazione (registrazione di utenti, programmi e syscall) sia consentito esclusivamente a thread in esecuzione con privilegi di amministratore (**EUID = 0**). La sola consultazione dello stato del monitor e degli elementi registrati è invece liberamente accessibile in qualsiasi momento.
+
+Inoltre, l'LKM espone dei dati riguardanti:
+- Il **massimo delay** applicato all'esecuzione di una syscall soggetta a throttling, indicando il relativo programma ed EUID.
+- Il **numero massimo** e **medio** di thread che sono stati sospesi.
+
+Fanno parte della repository anche il codice user-level necessario per la configurazione dell'LKM e gli applicativi per eseguire i test funzionali del sistema.
 
 ## Architettura
-Per maggiori informazioni, vedere [Documentazione Architettura](docs/architecture.md)
+Per maggiori informazioni sul design del modulo, consultare la [Documentazione Architettura](docs/architecture.md).
 
-## Guida d'uso
-Per maggiori informazioni, vedere [Documentazione Architettura](docs/usage_guide.md)
+## Guida all'Uso
+Per istruzioni sulla configurazione e l'utilizzo pratico, fare riferimento alla [Guida all'Uso](docs/usage_guide.md).
 
-## Future works
-1. Pensato per kernel 6.17, estendere il funzionamento dipendentemente dalla versione del kernel. 
+## Sviluppi Futuri
+- Il modulo è stato attualmente sviluppato per kernel 6.17. Tra i lavori futuri si prevede di estenderne la compatibilità per supportare in maniera nativa versioni aggiuntive del kernel Linux.

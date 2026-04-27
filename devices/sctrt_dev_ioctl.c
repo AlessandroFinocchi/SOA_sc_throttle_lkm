@@ -5,8 +5,9 @@
 #include <linux/capability.h>
 
 #include "sctrt.h"
-#include "sctrt_dev_ioctl.h"
 #include "sctrt_state.h"
+#include "sctrt_profiler.h"
+#include "sctrt_dev_ioctl.h"
 
 
 long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
@@ -68,8 +69,8 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
             break;
         
         /* =================== Read =================== */
-        case SC_THROTTLE_GET_TELEM: // Estrazione statistiche
-            // get_current_telemetry(&param.data.telemetry);
+        case SC_THROTTLE_GET_METRICS: // Estrazione statistiche
+            sctrt_profiler_get(&param);
             break;
 
         /* =================== Debug =================== */

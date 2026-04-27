@@ -74,7 +74,7 @@ int main() {
     }
 
     // 9. Invocazione della system call r_ioctl
-    if (ioctl(fd, SC_THROTTLE_GET_TELEM, &param) < 0) {
+    if (ioctl(fd, SC_THROTTLE_GET_METRICS, &param) < 0) {
         fprintf(stderr, "Errore r_ioctl non-root level: %s\n", strerror(errno));
         close(fd);
         return EXIT_FAILURE;

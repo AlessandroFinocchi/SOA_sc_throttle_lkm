@@ -5,6 +5,7 @@
 #include "sctrt_dev.h"
 #include "sctrt_core.h"
 #include "sctrt_state.h"
+#include "sctrt_profiler.h"
 #include "sctrt_kprobectx_saver.h"
 
 MODULE_LICENSE("GPL");
@@ -13,6 +14,7 @@ MODULE_DESCRIPTION("This module intercepts a set of syscall from a set\
                     of programs and users to limit their invocation rate.");
 
 static int sctrt_init(void) {
+	sctrt_profiler_init();
 	sctrt_core_init();
 
 	if(sctrt_dev_init()) 		goto end;

@@ -6,6 +6,7 @@
 /* Gestione differenziata degli include tra Kernel Space e User Space */
 #ifdef __KERNEL__
     #include <linux/types.h>
+    #include "sctrt.h"
 #else
     #include <stdbool.h>
     #include <sys/types.h>
@@ -13,6 +14,7 @@
 
 #define SC_THROTTLE_MAGIC 'a'
 #define MAX_PROG_NAME_LEN 256
+
 
 /* Enum per la numerazione sequenziale dei comandi */
 enum sc_throttle_ops {
@@ -27,7 +29,7 @@ enum sc_throttle_ops {
     OP_DEREG_PROG,
 
     // Read
-    OP_GET_TELEMETRY,
+    OP_GET_METRICS,
 
     // Debug
     OP_PRINT_MONITOR_STATE,
@@ -41,19 +43,21 @@ enum sc_throttle_ops {
 struct sc_throttle_param {
     union {
         bool new_state;                    /* Monitor acceso/spento */
-        unsigned int max_rate;             /* Valore MAX di invocazioni al secondo */
+        uint max_rate;             /* Valore MAX di invocazioni al secondo */
         int syscall_num;                   /* Numero della system call x86-64 */
         uid_t uid;                         /* User ID effettivo */
         char prog_name[MAX_PROG_NAME_LEN]; /* Nome dell'eseguibile */
         
         /* Struttura annidata per la telemetria (direzione kernel -> user) */
         struct {
-            unsigned long peak_delay_ns;
+            uint peak_blocked_threads;
+            ulong sum_blocked_threads;
+            uint total_samples;
+
+            ulong peak_delay_ns;
             char peak_prog_name[MAX_PROG_NAME_LEN];
             uid_t peak_uid;
-            unsigned int avg_blocked_threads;
-            unsigned int peak_blocked_threads;
-        } telemetry;
+        } profiler;
     } data;
 };
 
@@ -69,7 +73,7 @@ struct sc_throttle_param {
 #define SC_THROTTLE_DEREG_PROG  _IOW(SC_THROTTLE_MAGIC, OP_DEREG_PROG,        struct sc_throttle_param)
 
 // Read
-#define SC_THROTTLE_GET_TELEM   _IOR(SC_THROTTLE_MAGIC, OP_GET_TELEMETRY,     struct sc_throttle_param)
+#define SC_THROTTLE_GET_METRICS   _IOR(SC_THROTTLE_MAGIC, OP_GET_METRICS,     struct sc_throttle_param)
 
 // Debug
 #define SC_THROTTLE_PRINT_STATE _IO(SC_THROTTLE_MAGIC, OP_PRINT_MONITOR_STATE)

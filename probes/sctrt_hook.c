@@ -1,10 +1,11 @@
 #include <linux/kprobes.h>
 
 #include "sctrt.h"
-#include "sctrt_hook.h"
-#include "sctrt_kprobectx_saver.h"
-#include "sctrt_core.h"
 #include "sctrt_tb.h"
+#include "sctrt_hook.h"
+#include "sctrt_core.h"
+#include "sctrt_profiler.h"
+#include "sctrt_kprobectx_saver.h"
 
 #define target_func "x64_sys_call"
 
@@ -18,7 +19,11 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			__this_cpu_write(*kprobe_ctx_offset, NULL);
 			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 
+			sctrt_profiler_thread_sleep();
+
 			sctrt_wait_on_weq();
+
+			sctrt_profiler_thread_wakeup();
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);
