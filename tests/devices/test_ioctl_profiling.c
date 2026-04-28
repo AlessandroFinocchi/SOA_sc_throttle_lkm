@@ -38,7 +38,7 @@ int main() {
     // 3. Invocazione della system call ioctl
     for(int i = 0; i < 20; i++) {
         if (ioctl(fd, SC_THROTTLE_GET_METRICS, &param) < 0) {
-            fprintf(stderr, "Errore durante l'operazione ioctl (SC_THROTTLE_GET_TELEM): %s\n", strerror(errno));
+            fprintf(stderr, "Errore durante l'operazione ioctl (SC_THROTTLE_GET_METRICS): %s\n", strerror(errno));
             close(fd);
             return EXIT_FAILURE;
         }
@@ -47,22 +47,23 @@ int main() {
         printf("==============================================\n");
         printf("      PROFILAZIONE SOTTOSISTEMA THROTTLING    \n");
         printf("==============================================\n");
-        // printf("Ritardo massimo registrato:   %lu ns\n", param.data.telemetry.peak_delay_ns);
-        
-        // /* Gestione condizionale dell'output per evitare letture inconsistenti su dati non ancora campionati */
-        // if (param.data.telemetry.peak_delay_ns > 0) {
-        //     printf("Eseguibile resp. del picco:   %s\n", param.data.telemetry.peak_prog_name);
-        //     printf("EUID resp. del picco:         %u\n", param.data.telemetry.peak_uid);
-        // } else {
-        //     printf("Eseguibile resp. del picco:   N/A (Nessun throttling effettuato)\n");
-        //     printf("EUID resp. del picco:         N/A\n");
-        // }
         
         printf("--------------------------------------------------\n");
         printf("Picco thread bloccati/sec:    %u\n", param.data.profiler.peak_blocked_threads);
         printf("Totale thread bloccati   :    %lu\n", param.data.profiler.sum_blocked_threads);
         printf("Totale thread campioni   :    %u\n", param.data.profiler.total_samples);    
         printf("==================================================\n");
+
+        printf("Ritardo massimo registrato:   %lu ns\n", param.data.profiler.peak_delay_ns);
+        
+        /* Gestione condizionale dell'output per evitare letture inconsistenti su dati non ancora campionati */
+        if (param.data.profiler.peak_delay_ns > 0) {
+            printf("Eseguibile resp. del picco:   %s\n", param.data.profiler.peak_prog_name);
+            printf("EUID resp. del picco:         %u\n", param.data.profiler.peak_uid);
+        } else {
+            printf("Eseguibile resp. del picco:   N/A (Nessun throttling effettuato)\n");
+            printf("EUID resp. del picco:         N/A\n");
+        }
         
         sleep(1);
     }

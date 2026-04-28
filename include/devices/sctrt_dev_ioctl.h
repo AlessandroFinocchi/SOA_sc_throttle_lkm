@@ -10,6 +10,7 @@
 #else
     #include <stdbool.h>
     #include <sys/types.h>
+
 #endif
 
 #define SC_THROTTLE_MAGIC 'a'
@@ -48,7 +49,7 @@ struct sc_throttle_param {
         uid_t uid;                         /* User ID effettivo */
         char prog_name[MAX_PROG_NAME_LEN]; /* Nome dell'eseguibile */
         
-        /* Struttura annidata per la telemetria (direzione kernel -> user) */
+        /* Struttura annidata per la profilazione (direzione kernel -> user) */
         struct {
             uint peak_blocked_threads;
             ulong sum_blocked_threads;
@@ -56,7 +57,7 @@ struct sc_throttle_param {
 
             ulong peak_delay_ns;
             char peak_prog_name[MAX_PROG_NAME_LEN];
-            uid_t peak_uid;
+            uint peak_uid;
         } profiler;
     } data;
 };

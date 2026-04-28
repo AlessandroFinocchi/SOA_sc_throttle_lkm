@@ -10,7 +10,7 @@ void sctrt_profiler_reset(void);
 
 /* Interfacce per il tracciamento del ciclo di vita dei thread bloccati */
 void sctrt_profiler_thread_sleep(void);
-void sctrt_profiler_thread_wakeup(void);
+void sctrt_profiler_thread_wakeup(ktime_t start_time);
 
 /* Campionamento periodico invocato dal LAPIC timer */
 void sctrt_profiler_sample_window(void);

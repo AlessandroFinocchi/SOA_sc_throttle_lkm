@@ -1,4 +1,5 @@
 #include <linux/kprobes.h>
+#include <linux/ktime.h>
 
 #include "sctrt.h"
 #include "sctrt_tb.h"
@@ -16,14 +17,20 @@ void thread_migration_fn(void);
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
 		if(!take_token()) {
+			ktime_t start_time;
+
 			__this_cpu_write(*kprobe_ctx_offset, NULL);
 			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 
-			sctrt_profiler_thread_sleep();
+			/* Inizio campionamento telemetria */
+            start_time = ktime_get();
+            sctrt_profiler_thread_sleep();
 
+			/* Blocco del thread */
 			sctrt_wait_on_weq();
 
-			sctrt_profiler_thread_wakeup();
+			/* Fine campionamento telemetria */
+			sctrt_profiler_thread_wakeup(start_time);
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);

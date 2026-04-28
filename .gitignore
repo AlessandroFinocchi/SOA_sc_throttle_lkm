@@ -2,5 +2,6 @@
 /tests/devices/ops
 /tests/devices/perm
 /tests/devices/state
+/tests/devices/prof
 /tests/probes/single
 /tests/probes/stress
