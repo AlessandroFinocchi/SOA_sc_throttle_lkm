@@ -16,3 +16,5 @@ La ricerca del contesto di probing è funzione del design dell'allocatore della 
 - **Variabili Dinamiche**: Tutte le variabili allocate tramite `alloc_percpu()` sono caricate a run-time dall'allocatore in aree successive a quelle occupate dalle variabili per-CPU statiche.
 
 Questo meccanismo impone la seguente relazione spaziale invariante (in condizioni standard):$$\text{Offset}_{\text{Dinamico}} > \text{Offset}_{\text{Statico}}$$
+
+In tal modo è possibile effettuare una ricerca del contesto di probing nell'area di memoria dedicata alle variabili per-CPU, allocando una variabile dinamica e ricercando a ritroso il contesto, senza rischiare fault di memoria.

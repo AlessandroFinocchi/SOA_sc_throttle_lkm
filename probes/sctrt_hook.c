@@ -12,8 +12,6 @@
 
 static struct kprobe sc_probe;
 
-void thread_migration_fn(void);
-
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
 		if(!take_token()) {

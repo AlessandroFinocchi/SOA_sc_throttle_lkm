@@ -25,7 +25,8 @@ atomic_t tb_tokens ____cacheline_aligned_in_smp;
  */
 static atomic_t tb_max_tokens __read_mostly;
 
-/* Strutture per la gestione del Timer standard */
+/**
+ * Strutture per la gestione del Timer standard */
 static struct timer_list tb_timer;
 
 /**
@@ -41,7 +42,7 @@ static void tb_timer_callback(struct timer_list *t) {
 
     sctrt_profiler_sample_window();
     
-    /* * Riarmo del timer:
+    /** Riarmo del timer:
      * jiffies rappresenta il tempo corrente.
      * HZ è una costante architetturale (1000) che rappresenta
      * il numero di tick in esattamente 1 secondo.

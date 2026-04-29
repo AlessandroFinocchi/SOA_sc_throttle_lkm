@@ -1,1 +1,14 @@
 # Sottosistema Core
+
+## 1. Introduzione
+Il sottosistema core è deputato all'ispezione dei flussi d'esecuzione delle system call intercettate dal sottosistema probes, per valutarne la compatibilità con la policy di rate-limiting configurata, e in caso di eccesso della soglia, gestisce la sospensione del thread chiamante.
+
+## 2. Blocco dei thread
+Il blocco dei thread, compatibilmente alle regole di throttling, viene gestito attraverso l'utilizzo di primitive di sincronizzazione native del kernel, nello specifico le **wait-event queues**:
+
+- **Sospensione del thread**: Qualora un thread non riesce ad ottenere un token, secondo l'algoritmo token-bucket, viene posto in stato di sleep sulla wait-event queue come task interrompibile, in attesa di una duplice tipologia di eventi: infatti il thread potrà tornare attivo soltanto una volta che sarà in grado di ottenere un token, oppure nel caso in cui il monitor viene spento, garantendo il corretto sblocco dei thread in fase di smontaggio del modulo.
+
+- **Risveglio del thread**: Allo scadere di ciascuna finestra temporale, dalla durata di 1 secondo, il bucket viene riempito di tutti i suoi token, e contestualmente tutti i thread vengono risvegliati in modo da poter competere per i suddetti token in modo da poter ritornare nello stato running.
+
+## 3. Starvation di un thread
+La competizione dei thread per i token espone inevitabilmente il sistema a scenari in cui è possibile che un thread subisca **starvation**. Nel caso in cui numerosi thread entrino in competizione, questi riprenderanno il controllo della CPU seguendo il loro ordine di priorità prestabilito. In tale contesto, implementare controlli aggiuntivi per evitare la starvation potrebbe innescare fenomeni di **inversione di priorità**; per tale ragione, si demanda la risoluzione di questo problema alla logica di scheduling, accettando l'eventuale verificarsi di scenari di starvation.
