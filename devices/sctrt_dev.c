@@ -6,7 +6,7 @@
 #include "sctrt.h"
 #include "sctrt_dev.h"
 #include "sctrt_dev_ioctl.h"
-
+	
 #define DEVICE_NAME  "sctrt_dev"
 #define DEVICE_CLASS "sctrt_dev_cls"
 
@@ -23,10 +23,12 @@ static struct file_operations fops = {
   .unlocked_ioctl = sctrt_dev_ioctl
 };
 
-static char *devnode_mode(const struct device *dev, umode_t *mode)
-{
+static char *devnode_mode(const struct device *dev, umode_t *mode){
+	 /* Lettura a tutti
+	  * scrittura solo all'owner (root) 
+	  * esecuzione a nessuno */
     if (mode) {
-        *mode = 0644; /* Assegna lettura a tutti, scrittura solo all'owner (root) */
+        *mode = 0644;
     }
     return NULL;
 }

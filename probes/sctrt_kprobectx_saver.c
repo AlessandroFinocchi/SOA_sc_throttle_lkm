@@ -1,11 +1,11 @@
 #include <linux/kprobes.h>
 #include <linux/percpu.h>
 #include <linux/preempt.h>
+// #include <linux/maccess.h> // Necessario per copy_from_kernel_nofault
+#include <linux/uaccess.h>
 
 #include "sctrt.h"
 #include "sctrt_kprobectx_saver.h"
-
-DEFINE_PER_CPU(ulong, per_cpu_var);
 
 static struct kprobe dummy_probe;
 struct kprobe** kprobe_ctx_offset;
@@ -17,7 +17,8 @@ static noinline void dummy_target(void) {
 }
 
 static int dummy_hook(struct kprobe *p, struct pt_regs *regs) {
-    ulong* per_cpu_ptr = (ulong*)&per_cpu_var;
+    ulong __percpu* dyn_per_cpu_var = alloc_percpu(ulong);
+    ulong* per_cpu_ptr = (ulong*)dyn_per_cpu_var;
 
     while ((ulong)per_cpu_ptr > 0) {
         per_cpu_ptr -= 1;
@@ -28,6 +29,8 @@ static int dummy_hook(struct kprobe *p, struct pt_regs *regs) {
             break;
         }
     }
+    
+    free_percpu(dyn_per_cpu_var);
     return 0;
 }
 

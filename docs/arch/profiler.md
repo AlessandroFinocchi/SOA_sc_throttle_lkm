@@ -1,4 +1,4 @@
-# Profiler DA RIFARE DA CAPOOOOOOO
+# Sottosistema Profiler DA RIFARE DA CAPOOOOOOO
 
 ## Scelta di sincronizzazione
 Per i dati sul numero massimo e medio di thread si è scelto di usare variabili atomiche perchè ...

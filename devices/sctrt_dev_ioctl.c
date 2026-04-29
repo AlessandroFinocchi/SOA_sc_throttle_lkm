@@ -2,7 +2,7 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/cred.h>
-#include <linux/capability.h>
+#include <linux/uidgid.h> /* Necessario per uid_eq e GLOBAL_ROOT_UID */
 
 #include "sctrt.h"
 #include "sctrt_state.h"
@@ -16,10 +16,13 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
 
     /* Se il comando è una scrittura */
     if (_IOC_DIR(cmd) & _IOC_WRITE) {
-        if (!capable(CAP_SYS_ADMIN))
+        /* 
+         * Verifica formale dell'Effective User ID. 
+         * Garantisce che solo l'utente root globale possa procedere.
+         */
+        if (!uid_eq(current_euid(), GLOBAL_ROOT_UID))
             return -EPERM;
-        // if(current_euid().val != 0)
-        //     return -EPERM;
+        
         if (copy_from_user(&param, (struct sc_throttle_param __user *)arg, sizeof(param))) 
             return -EFAULT;
     }

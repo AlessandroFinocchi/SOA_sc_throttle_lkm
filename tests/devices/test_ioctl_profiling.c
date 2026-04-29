@@ -1,4 +1,4 @@
-/* Si vuole testare le operazioni di ioctl */
+/* Si vogliono testare le operazioni di profilazione */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,20 +14,11 @@
 int print_conf(int fd);
 
 int main() {
-    // 1. Validazione rigorosa del contesto di esecuzione (EUID)
-    if (geteuid() != 0) {
-        fprintf(stderr, "Errore critico: permessi insufficienti .\n");
-        fprintf(stderr, "Il programma deve essere eseguito con privilegi di root (EUID = 0).\n");
-        fprintf(stderr, "EUID corrente: %d\n", geteuid());
-        return EXIT_FAILURE;
-    }
-
-    // Da questo punto in poi, EUID == 0 è garantito.
     int fd;
     struct sc_throttle_param param = {0};
 
     // 2. Acquisizione del file descriptor
-    fd = open("/dev/sctrt_dev", O_RDWR);
+    fd = open("/dev/sctrt_dev", O_RDONLY);
     if (fd < 0) {
         fprintf(stderr, "Errore fatale open root level: %s\n", strerror(errno));
         return EXIT_FAILURE;
@@ -66,6 +57,8 @@ int main() {
         }
         
         sleep(1);
+
+        printf("\033[11A\r");
     }
 
 

@@ -1,4 +1,4 @@
-/* Si vuole testare le operazioni di ioctl */
+/* Si vuole testare l'accesione / spegnimento del monitor */
 
 #include <stdio.h>
 #include <stdlib.h>
