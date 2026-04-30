@@ -1,6 +1,4 @@
-# Sottosistema Profiler DA RIFARE DA CAPOOOOOOO
+# Sottosistema Profiler
 
 ## Scelta di sincronizzazione
-Per i dati sul numero massimo e medio di thread si è scelto di usare variabili atomiche perchè ...
-
-Per i dati sul massimo picco si è scelto si usare Seqlock_t perchè questi dati vengono scritti raramente: si può infatti pensare che dopo una prima fase di scritture intense, si raggiunga un picco che difficilmente venga superato, motivo per cui si è abbandonata l'idea di usare variabili per-CPU nell'ottica che questi dati possano essere read-intensive, e quindi per non spostare l'onere sui lettori.
+Mentre per mantenere le informazioni sul numero massimo e medio di thread si è optato per l'utilizzo di semplici variabili atomiche, per i dati sul massimo picco si è scelto di usare [Sequential Locks](https://docs.kernel.org/locking/seqlock.html#sequential-locks-seqlock-t) dal momento che questi dati vengono raramente scritti: infatti è ragionevole pensare che, dopo una prima fase transitoria (anche intensa) di "warm-up" di scritture, si raggiungano picchi che sempre più difficilmente possono venire superati, motivo per cui si è abbandonata l'idea di usare variabili per-CPU, nell'ottica anche che questi dati possano diventare read-intensive, così da non spostare l'onere sui lettori.

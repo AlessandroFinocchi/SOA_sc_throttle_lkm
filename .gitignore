@@ -5,3 +5,4 @@
 /tests/devices/prof
 /tests/probes/single
 /tests/probes/stress
+/tests/probes/perf

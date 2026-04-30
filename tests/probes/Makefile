@@ -7,5 +7,9 @@ single: probe_single.c
 stress: probe_stress.c
 	$(CC) $(CFLAGS) -o $@ $<
 
+# da eseguire come root
+perf: probe_perf.c
+	$(CC) -O2 $(CFLAGS) -o $@ $< -lm
+
 clean:
-	rm -f ops perm
+	rm -f probe_single probe_stress probe_perf
