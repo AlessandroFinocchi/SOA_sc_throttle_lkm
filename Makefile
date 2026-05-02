@@ -18,6 +18,7 @@ $(MODULE_NAME)-objs := $(MODULE_SRCS:.c=.o)
 # Aggiunge le directory degli header al percorso di ricerca del compilatore
 INCLUDE_DIRS := $(sort $(dir $(wildcard include/ include/*/)))
 ccflags-y += $(addprefix -I,$(INCLUDE_DIRS))
+# ccflags-y += -DNO_STARVATION
 
 # Percorso all'albero dei sorgenti o agli header del kernel in esecuzione
 KDIR := /lib/modules/$(shell uname -r)/build
