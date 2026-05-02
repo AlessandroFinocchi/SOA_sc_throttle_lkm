@@ -6,6 +6,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
+
+void alarm_handler() {
+    // Il kernel eseguirà comunque il passaggio per il signal delivery
+}
 
 int main() {
     int uid;
@@ -17,8 +22,14 @@ int main() {
     ts.tv_sec = ms_sleep / 1000;
     ts.tv_nsec = (ms_sleep % 1000) * 1000000L;
 
+    // Registrazione dell'handler per SIGALRM
+    // Senza questo, il raise() terminerebbe l'intero processo.
+    signal(SIGALRM, alarm_handler);
+
     for (int i = 0; i < duration; i++) {
         uid = getpid();
+        raise(SIGALRM);
+
         printf("%d\n", uid);
         nanosleep(&ts, NULL);
     }

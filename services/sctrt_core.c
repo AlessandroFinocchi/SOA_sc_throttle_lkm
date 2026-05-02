@@ -2,7 +2,7 @@
 #include <asm/syscall.h>      // Fornisce syscall_get_nr()
 #include <linux/wait.h>       // Fornisce wait_queue_head_t
 
-#ifdef NO_STARVATION
+#ifdef PRIO_FIFO
 #include <linux/atomic.h>     // Fornisce le primitive atomic64_t
 #endif
 
@@ -13,7 +13,11 @@
 
 wait_queue_head_t sctrt_weq;
 
-#ifdef NO_STARVATION
+#ifdef PRIO_FIFO
+#define WEQ_UNINT	/* FIFO prio => WEQ non interrompibili */
+#endif
+
+#ifdef PRIO_FIFO
 /* Contatori atomici per il Ticket Algorithm */
 atomic64_t sctrt_ticket_head;
 atomic64_t sctrt_ticket_tail;
@@ -22,14 +26,21 @@ atomic64_t sctrt_ticket_tail;
 void sctrt_core_init() {
     init_waitqueue_head(&sctrt_weq);
 
-#ifdef NO_STARVATION
+#ifdef PRIO_FIFO
     /* Inizializzazione della coda FIFO */
     atomic64_set(&sctrt_ticket_head, 0);
     atomic64_set(&sctrt_ticket_tail, 0);
-	printk("%s: core - no starvation mode enabled\n", MODNAME);
+	printk("%s: core - WEQ FIFO prio mode configured\n", MODNAME);
 #else
-	printk("%s: core - no starvation mode disabled\n", MODNAME);
+	printk("%s: core - WEQ Scheduler prio mode configured\n", MODNAME);
 #endif 
+
+#ifdef WEQ_UNINT
+	printk("%s: core - WEQ uninterruptible configured\n", MODNAME);
+#else
+	printk("%s: core - WEQ interruptible configured\n", MODNAME);
+#endif 
+
 }
 
 void sctrt_core_exit() {
@@ -71,10 +82,12 @@ int sctrt_wait_on_weq() {
      */
     int ret = 0;
 
-#ifdef NO_STARVATION
+#ifdef PRIO_FIFO
     /* Acquisizione atomica del ticket per il thread corrente */
     u64 my_ticket = atomic64_fetch_add(1, &sctrt_ticket_head);
+#endif
 
+#ifdef WEQ_UNINT
     /*
      * Sospensione in TASK_UNINTERRUPTIBLE per prevenire la corruzione 
      * della catena dei ticket a causa della ricezione di segnali pendenti.
@@ -82,22 +95,28 @@ int sctrt_wait_on_weq() {
     wait_event(
         sctrt_weq,
         !sctrt_is_monitor_active() || 
+    #ifdef PRIO_FIFO
         (atomic64_read(&sctrt_ticket_tail) == my_ticket && take_token())
+    #else
+        take_token()
+    #endif
     );
-
-    /* 
-     * Il thread ha superato la barriera: passa il testimone incrementando 
-     * la tail e risveglia gli altri thread affinché il prossimo 
-     * nella sequenza possa valutare la propria condizione. 
-     */
-    atomic64_inc(&sctrt_ticket_tail);
-    wake_up_all(&sctrt_weq);    
 #else
     ret = wait_event_interruptible(
         sctrt_weq,
         !sctrt_is_monitor_active() || 
         take_token()
     );
+#endif
+
+#ifdef PRIO_FIFO
+    /* 
+     * Il thread ha superato la barriera: passa il testimone incrementando 
+     * la tail e risveglia gli altri thread affinché il prossimo 
+     * nella sequenza possa valutare la propria condizione. 
+     */
+    atomic64_inc(&sctrt_ticket_tail);
+    wake_up_all(&sctrt_weq);
 #endif
 
     return ret;
@@ -107,7 +126,7 @@ void sctrt_wake_up_weq() {
     /*
      * Svuota la wait queue: risveglia tutti i thread pendenti.
      */
-#ifdef NO_STARVATION
+#ifdef WEQ_UNINT
     /* Risveglio per code TASK_UNINTERRUPTIBLE */
     wake_up_all(&sctrt_weq);
 #else
