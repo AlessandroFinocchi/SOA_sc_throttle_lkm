@@ -15,37 +15,35 @@ static struct kprobe sc_probe;
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
 		if(!take_token()) {
+			int weq_ret;
 			ktime_t start_time;
-
-			__this_cpu_write(*kprobe_ctx_offset, NULL);
-			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 
 			/* Inizio campionamento telemetria */
             start_time = ktime_get();
             sctrt_profiler_thread_sleep();
 
-#ifndef WEQ_UNINT
+			__this_cpu_write(*kprobe_ctx_offset, NULL);
+			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
+			
 			/* Blocco del thread */
-			int weq_ret;
 			weq_ret = sctrt_wait_on_weq();
-#endif
-
-			/* Fine campionamento telemetria */
-			sctrt_profiler_thread_wakeup(start_time);
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);
 
-#ifndef WEQ_UNINT
-			/* Se il thread è stato risvegliato da un segnale */
-			// if(weq_ret < 0) {
-			if(weq_ret == -ERESTARTSYS) {
-				/* orig_ax a -1 indica al dispatcher di non eseguire nessuna syscall */
-				the_regs->orig_ax = -1;
-				/* ax contiene l'errore -ERESTARTSYS da restituire al chiamante */
-				the_regs->ax = weq_ret;
-			}
-#endif
+			/* Fine campionamento telemetria */
+			sctrt_profiler_thread_wakeup(start_time);
+
+// #ifndef WEQ_UNINT
+// 			/* Se il thread è stato risvegliato da un segnale */
+// 			// if(weq_ret < 0) {
+// 			if(weq_ret == -ERESTARTSYS) {
+// 				/* orig_ax a -1 indica al dispatcher di non eseguire nessuna syscall */
+// 				the_regs->orig_ax = -1;
+// 				/* ax contiene l'errore -ERESTARTSYS da restituire al chiamante */
+// 				the_regs->ax = weq_ret;
+// 			}
+// #endif
 
 		}
     }

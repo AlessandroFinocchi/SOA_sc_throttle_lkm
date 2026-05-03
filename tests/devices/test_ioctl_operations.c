@@ -57,6 +57,18 @@ int main() {
     strncpy(param.data.prog_name, "stress", MAX_PROG_NAME_LEN - 1);
     if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
 
+    strncpy(param.data.prog_name, "stress1", MAX_PROG_NAME_LEN - 1);
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+
+    strncpy(param.data.prog_name, "stress2", MAX_PROG_NAME_LEN - 1);
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+
+    strncpy(param.data.prog_name, "stress3", MAX_PROG_NAME_LEN - 1);
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+
+    strncpy(param.data.prog_name, "stress4", MAX_PROG_NAME_LEN - 1);
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+
     if(print_conf(fd) < 0) goto err;
 
     // 4. Rilascio delle risorse

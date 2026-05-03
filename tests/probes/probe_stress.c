@@ -30,7 +30,7 @@ int main() {
         uid = getpid();
         raise(SIGALRM);
 
-        printf("%d\n", uid);
+        printf("PID [%d] - chiamata PID numero %d\n", uid, i);
         nanosleep(&ts, NULL);
     }
 

@@ -19,7 +19,7 @@ $(MODULE_NAME)-objs := $(MODULE_SRCS:.c=.o)
 INCLUDE_DIRS := $(sort $(dir $(wildcard include/ include/*/)))
 ccflags-y += $(addprefix -I,$(INCLUDE_DIRS))
 # ccflags-y += -DPRIO_FIFO # => WEQ_UNINT
-ccflags-y += -DWEQ_UNINT
+# ccflags-y += -DWEQ_UNINT
 
 # Percorso all'albero dei sorgenti o agli header del kernel in esecuzione
 KDIR := /lib/modules/$(shell uname -r)/build
