@@ -37,19 +37,41 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 #ifndef WEQ_UNINT
 			/* Se il thread è stato risvegliato da un segnale */
 			if(weq_ret < 0) {
-                /* 1. Riferimento ai registri dello spazio utente (passati in %rdi) */
-				struct pt_regs *user_regs = (struct pt_regs *)the_regs->di;
-				
-				/* 2. Invalidazione della syscall */
-				user_regs->orig_ax = -1;
-                the_regs->orig_ax = -1;
-				
-				/* 3. Iniezione dell'errore custom.*/
-				user_regs->ax = -EINTR;
+                /* 1. Estrazione di user_regs tramite ABI x86_64.
+                 * Il primo argomento di x64_sys_call risiede nel registro %rdi.
+                 */
+                struct pt_regs *user_regs = (struct pt_regs *)the_regs->di;
+                
+                /* 
+                 * 2. Alterazione strutturale di user_regs.
+                 * Invalidiamo il numero della syscall nativa (orig_ax) per garantire 
+                 * semanticamente il fallimento dell'operazione, prevenendo esecuzioni 
+                 * accidentali se ftrace inibisce il salto condizionato.
+                 */
+                user_regs->orig_ax = -1;
+                
+                /* 
+                 * 3. Redirezione dell'Instruction Pointer e Unwind dello Stack.
+                 * Viene simulata un'istruzione ret, ripristinando il chiamante originario.
+                 */
+                unsigned long ret_addr = *(unsigned long *)the_regs->sp;
+                the_regs->ip = ret_addr;
+                the_regs->sp += sizeof(unsigned long);
+                
+                /* 
+                 * 4. Propagazione architetturale dell'errore (-EINTR).
+                 * In kernel 6.x, do_syscall_64 leggerà the_regs->ax al rientro 
+                 * per poi sovrascrivere iterativamente user_regs->ax.
+                 */
                 the_regs->ax = -EINTR;
-				
-				/* 4. Richiesta a kprobes di bypassare l'istruzione originale */
-				return 1;
+                
+                /* 
+                 * Alterazione diretta (opzionale ma rigorosa) del valore di ritorno in user_regs.
+                 */
+                user_regs->ax = -EINTR;
+                
+                /* Ritorno forzato per notificare la kprobe dell'intercettazione */
+                return 1;
 			}
 #endif
 
