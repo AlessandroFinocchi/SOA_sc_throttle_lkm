@@ -5,5 +5,7 @@
 /tests/devices/prof
 /tests/probes/single
 /tests/probes/stress
+/tests/probes/stress2
 /tests/probes/stresses
+/tests/probes/stresses2
 /tests/probes/perf

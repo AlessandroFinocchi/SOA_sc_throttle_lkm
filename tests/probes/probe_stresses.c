@@ -1,3 +1,7 @@
+/* 
+ * Dopo aver lanciato tests/devices/test_ioctl_operations
+ */
+
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,25 +11,29 @@
 #include <pthread.h>
 #include <string.h>
 #include <signal.h>
+
+#ifdef ATTACK
 #include <stdatomic.h>
+#endif
 
 #define NUM_THREADS 4
 #define THREAD_NAME "stress"
 
 pthread_t threads[NUM_THREADS];
+
+#ifdef ATTACK
 atomic_bool keep_running = ATOMIC_VAR_INIT(true);
 
 void alarm_handler() {
-    // Il kernel eseguirà comunque il passaggio per il signal delivery
+    fflush(stdout);
 }
+#endif
 
 void* syscalls_routine(void *index) {
     char* name = NULL;
 
-    // asprintf allocates memory and points thread_name_ptr to it
-    // It returns the number of bytes printed, or -1 on allocation failure.    
+    /* asprintf alloca anche la memoria, -1 se l'allocazione fallisce*/    
     if ((asprintf(&name, "%s%d", THREAD_NAME, *(int *)index) == -1)) {
-        // asprintf leaves the pointer undefined on failure, ensure it is NULL
         return NULL; 
     }
 
@@ -41,24 +49,26 @@ void* syscalls_routine(void *index) {
 
     for (int i = 0; i < duration; i++) {
         pid_t pid = getpid();
-        raise(SIGALRM);
         
         printf("Thread [%s] - PID [%d] - chiamata PID numero %d\n", name, pid, i);
+        fflush(stdout);
         nanosleep(&ts, NULL);
     }
 
+    // Al termine dell'iterazione, segnala all'alarm thread di arrestarsi
+#ifdef ATTACK
     atomic_store(&keep_running, false);
+#endif
     free(name);
     return NULL;
 }
 
+#ifdef ATTACK
 void* alarm_routine() {
     char* name = NULL;
 
-    // asprintf allocates memory and points thread_name_ptr to it
-    // It returns the number of bytes printed, or -1 on allocation failure.    
+    /* asprintf alloca anche la memoria, -1 se l'allocazione fallisce*/  
     if ((asprintf(&name, "%s", "no_stress") == -1)) {
-        // asprintf leaves the pointer undefined on failure, ensure it is NULL
         return NULL;
     }
 
@@ -72,8 +82,7 @@ void* alarm_routine() {
     ts.tv_nsec = (ms_sleep % 1000) * 1000000L;
 
     while (atomic_load(&keep_running)) {
-        // Invia il segnale SIGALRM specificamente al Thread 1
-
+        // Invia il segnale SIGALRM agli altri thread
         for(int i = 0; i < NUM_THREADS; i++){
             pthread_kill(threads[i], SIGALRM);
         }
@@ -85,14 +94,27 @@ void* alarm_routine() {
     free(name);
     return NULL;
 }
+#endif
 
 int main() {
-    pthread_t alrm_thread;
     int thread_args[NUM_THREADS];
     
-    // Registrazione dell'handler per SIGALRM
-    // Senza questo, il primo thread che chiama raise() terminerebbe l'intero processo.
-    signal(SIGALRM, alarm_handler);
+#ifndef ATTACK
+    printf("Attacco stresses disabilitato\n");
+#else
+    printf("Attacco stresses abilitato\n");
+    pthread_t alrm_thread;
+    // Gli handler (signal disposition) sono condivisi a livello di processo.
+    struct sigaction sa;
+    sa.sa_handler = alarm_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0; // Nessun flag SA_RESTART: vogliamo che il segnale interrompa eventuali syscall
+    
+    if (sigaction(SIGALRM, &sa, NULL) == -1) {
+        perror("Errore nella registrazione di sigaction");
+        return 1;
+    }
+#endif
 
     for (long t = 0; t < NUM_THREADS; t++) {
         thread_args[t] = t+1;
@@ -102,15 +124,21 @@ int main() {
         }
     }
     
+#ifdef ATTACK
     if (pthread_create(&alrm_thread, NULL, alarm_routine, NULL) != 0) {
         perror("Errore creazione Thread alrm_thread");
         return 1;
     }
+#endif
 
     for (long t = 0; t < NUM_THREADS; t++) {
         pthread_join(threads[t], NULL);
     }
-        pthread_join(alrm_thread, NULL);
 
+#ifdef ATTACK
+    pthread_join(alrm_thread, NULL);
+#endif
+
+    printf("Esecuzione terminata regolarmente.\n");
     return 0;
 }

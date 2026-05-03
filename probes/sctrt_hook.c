@@ -28,7 +28,7 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			/* Blocco del thread */
 			do{
 				weq_ret = sctrt_wait_on_weq();
-			}while (weq_ret < 0);
+			} while (weq_ret < 0);
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);
