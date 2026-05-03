@@ -22,6 +22,7 @@ pthread_t thread1;
 void alarm_handler() {
     // L'handler è intenzionalmente vuoto.
     // Il kernel eseguirà il signal delivery interrompendo il thread bersaglio.
+    fflush(stdout);
 }
 
 void* syscalls_routine(void* arg) {

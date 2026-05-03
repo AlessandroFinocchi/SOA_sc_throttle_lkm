@@ -26,7 +26,9 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 			
 			/* Blocco del thread */
-			weq_ret = sctrt_wait_on_weq();
+			do{
+				weq_ret = sctrt_wait_on_weq();
+			}while (weq_ret < 0);
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);
@@ -34,46 +36,21 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			/* Fine campionamento telemetria */
 			sctrt_profiler_thread_wakeup(start_time);
 
-#ifndef WEQ_UNINT
-			/* Se il thread è stato risvegliato da un segnale */
-			if(weq_ret < 0) {
-                /* 1. Estrazione di user_regs tramite ABI x86_64.
-                 * Il primo argomento di x64_sys_call risiede nel registro %rdi.
-                 */
-                struct pt_regs *user_regs = (struct pt_regs *)the_regs->di;
-                
-                /* 
-                 * 2. Alterazione strutturale di user_regs.
-                 * Invalidiamo il numero della syscall nativa (orig_ax) per garantire 
-                 * semanticamente il fallimento dell'operazione, prevenendo esecuzioni 
-                 * accidentali se ftrace inibisce il salto condizionato.
-                 */
-                user_regs->orig_ax = -1;
-                
-                /* 
-                 * 3. Redirezione dell'Instruction Pointer e Unwind dello Stack.
-                 * Viene simulata un'istruzione ret, ripristinando il chiamante originario.
-                 */
-                unsigned long ret_addr = *(unsigned long *)the_regs->sp;
-                the_regs->ip = ret_addr;
-                the_regs->sp += sizeof(unsigned long);
-                
-                /* 
-                 * 4. Propagazione architetturale dell'errore (-EINTR).
-                 * In kernel 6.x, do_syscall_64 leggerà the_regs->ax al rientro 
-                 * per poi sovrascrivere iterativamente user_regs->ax.
-                 */
-                the_regs->ax = -EINTR;
-                
-                /* 
-                 * Alterazione diretta (opzionale ma rigorosa) del valore di ritorno in user_regs.
-                 */
-                user_regs->ax = -EINTR;
-                
-                /* Ritorno forzato per notificare la kprobe dell'intercettazione */
-                return 1;
-			}
-#endif
+// #ifndef WEQ_UNINT
+// 			/* Se il thread è stato risvegliato da un segnale */
+// 			if(weq_ret < 0) {
+//                 /* TODO: 
+// 				 * 
+// 				 * Ridirezionare il flusso per evitare di 
+// 				 * eseguire la syscall risvegliata dal segnale.
+// 				 *
+// 				 * Due modi:
+// 				 * 1. Ridirezionare verso la ni_sys_call
+// 				 * 2. Ridirezionare verso il return address nei 
+// 				 *   registri
+// 				 */
+// 			}
+// #endif
 
 		}
     }
