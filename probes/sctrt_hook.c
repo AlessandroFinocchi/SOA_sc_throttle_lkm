@@ -34,16 +34,24 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			/* Fine campionamento telemetria */
 			sctrt_profiler_thread_wakeup(start_time);
 
-// #ifndef WEQ_UNINT
-// 			/* Se il thread è stato risvegliato da un segnale */
-// 			// if(weq_ret < 0) {
-// 			if(weq_ret == -ERESTARTSYS) {
-// 				/* orig_ax a -1 indica al dispatcher di non eseguire nessuna syscall */
-// 				the_regs->orig_ax = -1;
-// 				/* ax contiene l'errore -ERESTARTSYS da restituire al chiamante */
-// 				the_regs->ax = weq_ret;
-// 			}
-// #endif
+#ifndef WEQ_UNINT
+			/* Se il thread è stato risvegliato da un segnale */
+			if(weq_ret < 0) {
+                /* 1. Riferimento ai registri dello spazio utente (passati in %rdi) */
+				struct pt_regs *user_regs = (struct pt_regs *)the_regs->di;
+				
+				/* 2. Invalidazione della syscall */
+				user_regs->orig_ax = -1;
+                the_regs->orig_ax = -1;
+				
+				/* 3. Iniezione dell'errore custom.*/
+				user_regs->ax = -EINTR;
+                the_regs->ax = -EINTR;
+				
+				/* 4. Richiesta a kprobes di bypassare l'istruzione originale */
+				return 1;
+			}
+#endif
 
 		}
     }
@@ -52,10 +60,11 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 
 int sctrt_hook_init(void) {
 	int status;
+
 	if((status = token_bucket_init(10))){
 		goto end;
 	}
-	
+
 	sc_probe = (struct kprobe){0}; // Reset di tutti gli elementi a 0 per reinizializzazioni
 	sc_probe.symbol_name = target_func;
 	sc_probe.pre_handler = (kprobe_pre_handler_t)pre_hook; // Eseguita nell'entry point della funzione
