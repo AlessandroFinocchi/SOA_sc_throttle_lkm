@@ -2,10 +2,11 @@
 #define _SCTRT_STATE_H
 
 #include <linux/types.h>
+#include <linux/atomic.h>
 
 struct sctrt_state {
     /* Monitor state */
-    bool is_active;
+    atomic_t is_active;
     struct sc_bitmap *syscalls;
     struct string_hash *programs;
     struct euid_hash *users;

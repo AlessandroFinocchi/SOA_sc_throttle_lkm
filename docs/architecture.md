@@ -40,16 +40,13 @@ flowchart LR
     
     %% Edge Definitions (Core)
     core --> state_node
-    core --> tb
+    core <--> tb
     
     %% Edge Definitions (System Call Table modifications)
     sctrt --> state_node
     sctrt --> dev
     sctrt --> hook_ctxsaver
     sctrt --> core
-    
-    %% Edge Definitions (Trace Buffer / TB)
-    tb --> core
 ```
 
 ## Devices

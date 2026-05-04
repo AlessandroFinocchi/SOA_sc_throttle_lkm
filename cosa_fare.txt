@@ -1,0 +1,5 @@
+Come togliere le kprobe
+1. spegni il monitor
+2. sveglia tutti
+3. aspetta che tutti finiscano con wait_for_completion
+4. stacca le kprobe

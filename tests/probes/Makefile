@@ -21,4 +21,4 @@ perf: probe_perf.c
 	$(CC) -O2 $(CFLAGS) -o $@ $< -lm
 
 clean:
-	rm -f single stress stresses perf
+	rm -f single stress stress2 stresses stresses2 perf

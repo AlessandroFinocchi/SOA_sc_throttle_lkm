@@ -33,7 +33,8 @@ int sctrt_state_init() {
         goto delete_state_programs_users;
     }
 
-    state->is_active = false;
+    atomic_set(&(state->is_active), false);
+
     return 0;
 
 delete_state_programs_users:
@@ -57,7 +58,7 @@ void sctrt_state_cleanup() {
 
 /* ============== Control ops. ============== */
 bool sctrt_is_monitor_active() {
-    return state->is_active;
+    return atomic_read(&(state->is_active));
 }
 
 bool sctrt_is_syscall_registered(long syscall_nr) {
@@ -75,12 +76,8 @@ bool sctrt_is_euid_registered(kuid_t euid) {
 
 /* =============== Write ops. =============== */
 int sctrt_monitor_enable() {
-    int status;
-
     if(!sctrt_is_monitor_active()){
-        if((status = sctrt_hook_init()))
-            return status;
-        state->is_active = true;
+        atomic_set(&(state->is_active), true);
     }
 
     return 0;
@@ -88,8 +85,7 @@ int sctrt_monitor_enable() {
 
 void sctrt_monitor_disable() {
     if(sctrt_is_monitor_active()){
-        sctrt_hook_exit();
-        state->is_active = false;
+        atomic_set(&(state->is_active), false);
     }
 }
 

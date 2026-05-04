@@ -38,7 +38,7 @@ void* syscalls_routine() {
     pthread_setname_np(pthread_self(), name);
 
     int ms_sleep = 50;
-    int duration = 10 * 1000 / ms_sleep;
+    int duration = 30 * 1000 / ms_sleep;
     struct timespec ts;
     
     ts.tv_sec = ms_sleep / 1000;

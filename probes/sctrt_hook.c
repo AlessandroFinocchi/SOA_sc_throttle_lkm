@@ -5,6 +5,7 @@
 #include "sctrt_tb.h"
 #include "sctrt_hook.h"
 #include "sctrt_core.h"
+#include "sctrt_state.h"
 #include "sctrt_profiler.h"
 #include "sctrt_kprobectx_saver.h"
 
@@ -14,6 +15,9 @@ static struct kprobe sc_probe;
 
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
+
+		if(!sctrt_is_monitor_active()) return 0;
+
 		if(!take_token()) {
 			int weq_ret;
 			ktime_t start_time;
@@ -60,7 +64,7 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 int sctrt_hook_init(void) {
 	int status;
 
-	if((status = token_bucket_init(10))){
+	if((status = token_bucket_init(2))){
 		goto end;
 	}
 

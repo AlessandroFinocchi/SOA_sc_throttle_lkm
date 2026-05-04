@@ -35,3 +35,4 @@ Per istruzioni sulla configurazione e l'utilizzo pratico, fare riferimento alla 
 
 ## Sviluppi Futuri
 - Il modulo è stato attualmente sviluppato per kernel 6.17. Tra i lavori futuri si prevede di estenderne la compatibilità per supportare in maniera nativa versioni aggiuntive del kernel Linux.
+- Il componente di intercettazione `sctrt_hook` può ridirezionare un thread svegliato da un segnale che non ha preso alcun token verso la ni syscall, attualmente un tale thread viene semplicemente rimesso a dormire.
