@@ -22,6 +22,7 @@ pthread_t syscalls_thread;
 atomic_bool keep_running = ATOMIC_VAR_INIT(true);
 
 void alarm_handler() {
+    printf("Sono l'handler!\n");
     fflush(stdout);
 }
 #endif

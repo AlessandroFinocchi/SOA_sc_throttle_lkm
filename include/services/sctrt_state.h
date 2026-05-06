@@ -13,6 +13,7 @@ struct sctrt_state {
 };
 
 extern struct sctrt_state *state;
+extern atomic_t sctrt_in_flight;
 
 int sctrt_state_init(void);
 void sctrt_state_cleanup(void);

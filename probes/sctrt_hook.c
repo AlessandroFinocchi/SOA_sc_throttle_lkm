@@ -22,6 +22,10 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			int weq_ret;
 			ktime_t start_time;
 
+			if (preempt_count() == 0 || irqs_disabled()) return 0;
+		
+			atomic_inc(&sctrt_in_flight);
+
 			/* Inizio campionamento telemetria */
             start_time = ktime_get();
             sctrt_profiler_thread_sleep();
@@ -55,6 +59,8 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 // 				 */
 // 			}
 // #endif
+
+		atomic_dec(&sctrt_in_flight);
 
 		}
     }

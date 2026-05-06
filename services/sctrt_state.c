@@ -1,16 +1,19 @@
 #include <linux/slab.h>
-#include <linux/errno.h>
+#include <linux/errno.h> // For msleep
+#include <linux/delay.h>
 #include <asm/unistd.h> // For __NR_* macros (i.e. __NR_read)
 
 #include "sctrt.h"
 #include "sctrt_state.h"
 #include "sctrt_hook.h"
 #include "sctrt_tb.h"
+#include "sctrt_core.h"
 #include "sc_bitmap.h"
 #include "euid_hash.h"
 #include "str_hash.h"
 
 struct sctrt_state *state;
+atomic_t sctrt_in_flight = ATOMIC_INIT(0);
 
 int sctrt_state_init() {
     int status;
@@ -78,6 +81,7 @@ bool sctrt_is_euid_registered(kuid_t euid) {
 int sctrt_monitor_enable() {
     if(!sctrt_is_monitor_active()){
         atomic_set(&(state->is_active), true);
+        sctrt_hook_init();
     }
 
     return 0;
@@ -86,6 +90,18 @@ int sctrt_monitor_enable() {
 void sctrt_monitor_disable() {
     if(sctrt_is_monitor_active()){
         atomic_set(&(state->is_active), false);
+
+        while (atomic_read(&sctrt_in_flight) != 0) {
+            sctrt_wake_up_weq();
+            msleep(100);
+        }
+
+        sctrt_hook_exit();
+
+        while (atomic_read(&sctrt_in_flight) != 0) {
+            sctrt_wake_up_weq();
+            msleep(100);
+        }
     }
 }
 
