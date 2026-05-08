@@ -1,5 +1,8 @@
-Come togliere le kprobe
-1. spegni il monitor
-2. sveglia tutti
-3. aspetta che tutti finiscano con wait_for_completion
-4. stacca le kprobe
+Adesso un thread che chiama un segnale non lo esegue,
+poichè rimane bloccato in kernel space, e il thread
+esegue il segnale solo nel momento in cui ritorna
+dallo user-space. Quindi devi levare il loop in cui
+rimetti il thread a dormire e cercare di andare
+o verso la nisyscall o in geenrale ritornare con un
+valore custom.
+Giuse l'ha fatto

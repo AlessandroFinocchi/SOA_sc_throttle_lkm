@@ -34,9 +34,9 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 			
 			/* Blocco del thread */
-			do{
+			// do{
 				weq_ret = sctrt_wait_on_weq();
-			} while (weq_ret < 0);
+			// } while (weq_ret < 0);
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);
@@ -44,24 +44,19 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			/* Fine campionamento telemetria */
 			sctrt_profiler_thread_wakeup(start_time);
 
-// #ifndef WEQ_UNINT
-// 			/* Se il thread è stato risvegliato da un segnale */
-// 			if(weq_ret < 0) {
-//                 /* TODO: 
-// 				 * 
-// 				 * Ridirezionare il flusso per evitare di 
-// 				 * eseguire la syscall risvegliata dal segnale.
-// 				 *
-// 				 * Due modi:
-// 				 * 1. Ridirezionare verso la ni_sys_call
-// 				 * 2. Ridirezionare verso il return address nei 
-// 				 *   registri
-// 				 */
-// 			}
-// #endif
+			atomic_dec(&sctrt_in_flight);
 
-		atomic_dec(&sctrt_in_flight);
-
+#ifndef WEQ_UNINT
+			/* Se il thread è stato risvegliato da un segnale */
+			if(weq_ret != 0) {
+				printk("AAAAAA-ecchice %d", atomic_read(&sctrt_in_flight));
+				unsigned long ret_addr = *(unsigned long *)the_regs->sp;
+				the_regs->ip = ret_addr;
+				the_regs->sp += sizeof(long);
+				the_regs->ax = -EPERM;
+				return 1;
+			}
+#endif
 		}
     }
     return 0;

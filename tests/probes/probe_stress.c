@@ -38,7 +38,7 @@ void* syscalls_routine() {
     // Imposta il nome del thread per il kernel (current->comm)
     pthread_setname_np(pthread_self(), name);
 
-    int ms_sleep = 50;
+    int ms_sleep = 200;
     int duration = 30 * 1000 / ms_sleep;
     struct timespec ts;
     
