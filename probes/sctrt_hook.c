@@ -13,16 +13,31 @@
 
 static struct kprobe sc_probe;
 
+// static int pre_hook2(struct kprobe *p, struct pt_regs *the_regs) {
+//     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
+
+// 		if(!take_token()) {
+// 			unsigned long ret_addr = *(unsigned long *)the_regs->sp;
+// 			the_regs->ip = ret_addr;
+// 			the_regs->sp += sizeof(long);
+// 			the_regs->ax = -EPERM;
+// 			return 1;
+// 		}
+// 	}
+// 	return 0;
+// }
+
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
+
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
+
+		// if (preempt_count() == 0 || irqs_disabled()) return 0;
 
 		if(!sctrt_is_monitor_active()) return 0;
 
 		if(!take_token()) {
 			int weq_ret;
 			ktime_t start_time;
-
-			if (preempt_count() == 0 || irqs_disabled()) return 0;
 		
 			atomic_inc(&sctrt_in_flight);
 
@@ -34,9 +49,7 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			preempt_enable();// --- INIZIO SEZIONE PREEMPTABLE ---
 			
 			/* Blocco del thread */
-			// do{
-				weq_ret = sctrt_wait_on_weq();
-			// } while (weq_ret < 0);
+			weq_ret = sctrt_wait_on_weq();
 
 			preempt_disable();// --- FINE SEZIONE PREEMPTABLE ---
 			__this_cpu_write(*kprobe_ctx_offset, p);
@@ -46,21 +59,47 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 
 			atomic_dec(&sctrt_in_flight);
 
+			printk("AAAAAA-ecchice %d\n", weq_ret);
+
 #ifndef WEQ_UNINT
 			/* Se il thread è stato risvegliato da un segnale */
-			if(weq_ret != 0) {
-				printk("AAAAAA-ecchice %d", atomic_read(&sctrt_in_flight));
-				unsigned long ret_addr = *(unsigned long *)the_regs->sp;
-				the_regs->ip = ret_addr;
-				the_regs->sp += sizeof(long);
-				the_regs->ax = -EPERM;
-				return 1;
-			}
+			// if(weq_ret != 0) {
+			// 	unsigned long ret_addr = *(unsigned long *)the_regs->sp;
+			// 	the_regs->ip = ret_addr;
+			// 	the_regs->sp += sizeof(long);
+			// 	the_regs->ax = -EPERM;
+			// 	return 1;
+			// }
 #endif
 		}
     }
     return 0;
 }
+
+// static void post_hook(struct kprobe *p, struct pt_regs *the_regs, unsigned long flags) {
+//     /* Essenziale perchè da kernel 6.13 c'è stata un'ottimizzazione del sottosistema
+// 	 * delle kprobe, come scritto nella documentazione ufficiale al link
+// 	 * https://www.kernel.org/doc/Documentation/trace/kprobes.rst
+// 	 *
+// 	 * """
+// 	 * NOTE for geeks:
+// 	 * The jump optimization changes the kprobe's pre_handler behavior.
+// 	 * Without optimization, the pre_handler can change the kernel's execution
+// 	 * path by changing regs->ip and returning 1.  However, when the probe
+// 	 * is optimized, that modification is ignored.  Thus, if you want to
+// 	 * tweak the kernel's execution path, you need to suppress optimization,
+// 	 * using one of the following techniques:
+// 	 * 
+// 	 * - Specify an empty function for the kprobe's post_handler.
+// 	 * 
+// 	 * or
+// 	 * 
+// 	 * - Execute 'sysctl -w debug.kprobes-optimization=0'
+// 	 * 
+// 	 * .. _kprobes_blacklist:
+// 	 * """
+// 	 */
+// }
 
 int sctrt_hook_init(void) {
 	int status;
@@ -72,6 +111,7 @@ int sctrt_hook_init(void) {
 	sc_probe = (struct kprobe){0}; // Reset di tutti gli elementi a 0 per reinizializzazioni
 	sc_probe.symbol_name = target_func;
 	sc_probe.pre_handler = (kprobe_pre_handler_t)pre_hook; // Eseguita nell'entry point della funzione
+	// sc_probe.post_handler = (kprobe_post_handler_t)post_hook;
 
 	if ((status = register_kprobe(&sc_probe))) {
 		printk("%s: probes - Initialization failed, returned %d\n", MODNAME, status);

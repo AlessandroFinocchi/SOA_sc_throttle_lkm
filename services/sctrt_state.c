@@ -97,11 +97,6 @@ void sctrt_monitor_disable() {
         }
 
         sctrt_hook_exit();
-
-        while (atomic_read(&sctrt_in_flight) != 0) {
-            sctrt_wake_up_weq();
-            msleep(100);
-        }
     }
 }
 
