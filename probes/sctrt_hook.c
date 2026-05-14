@@ -13,28 +13,9 @@
 
 static struct kprobe sc_probe;
 
-// static int pre_hook2(struct kprobe *p, struct pt_regs *the_regs) {
-//     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
-
-// 		if(!take_token()) {
-// 			unsigned long ret_addr = *(unsigned long *)the_regs->sp;
-// 			the_regs->ip = ret_addr;
-// 			the_regs->sp += sizeof(long);
-// 			the_regs->ax = -EPERM;
-// 			return 1;
-// 		}
-// 	}
-// 	return 0;
-// }
-
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
-
-    	printk("%s: gld: %p\n", MODNAME, this_cpu_read(*kprobe_ctx_offset));
-    	printk("%s: gld: %p\n", MODNAME, p);
-
-		// if (preempt_count() == 0 || irqs_disabled()) return 0;
 
 		if(!sctrt_is_monitor_active()) return 0;
 
@@ -61,8 +42,6 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 			sctrt_profiler_thread_wakeup(start_time);
 
 			atomic_dec(&sctrt_in_flight);
-
-			printk("AAAAAA-ecchice %d\n", weq_ret);
 
 #ifndef WEQ_UNINT
 			/* Se il thread è stato risvegliato da un segnale */
