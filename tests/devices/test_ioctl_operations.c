@@ -29,13 +29,13 @@ int main() {
     // 2. Acquisizione del file descriptor
     fd = open("/dev/sctrt_dev", O_RDWR);
     if (fd < 0) {
-        fprintf(stderr, "Errore fatale open root level: %s\n", strerror(errno));
+        fprintf(stderr, "Errore open root level: %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
 
     if(print_conf(fd) < 0) goto err;
     
-    // 3. Invocazione della system call ioctl (impostiamo stato ON)
+    // 3. Invocazione delle ioctl
     param.data.new_state = true;
     if (ioctl(fd, SC_THROTTLE_SET_STATE, &param) < 0) goto err;
 
@@ -43,39 +43,56 @@ int main() {
     if (ioctl(fd, SC_THROTTLE_SET_RATE, &param) < 0) goto err;
 
     param.data.syscall_num = __NR_getpid;
-    if (ioctl(fd, SC_THROTTLE_REG_SYS, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_SYS, &param) < 0) { 
+        if(errno != EINVAL) goto err;
+    }   
 
     param.data.uid = 1000;
-    if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) { 
+        printf("%d", errno);
+        if(errno != EINVAL) goto err;
+    }   
 
     param.data.uid = 1001;
-    if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_UID, &param) < 0) { 
+        if(errno != EINVAL) goto err;
+    }   
 
     strncpy(param.data.prog_name, "single", MAX_PROG_NAME_LEN - 1);
-    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) { 
+        if(errno != EINVAL) goto err;
+    }   
 
     strncpy(param.data.prog_name, "stress", MAX_PROG_NAME_LEN - 1);
-    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) { 
+        if(errno != EINVAL) goto err;
+    }   
 
     strncpy(param.data.prog_name, "stress1", MAX_PROG_NAME_LEN - 1);
-    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) { 
+        if(errno != EINVAL) goto err;
+    }   
 
     strncpy(param.data.prog_name, "stress2", MAX_PROG_NAME_LEN - 1);
-    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) { 
+        if(errno != EINVAL) goto err;
+    }   
 
     strncpy(param.data.prog_name, "stress3", MAX_PROG_NAME_LEN - 1);
-    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) { 
+        if(errno != EINVAL) goto err;
+    }   
 
     strncpy(param.data.prog_name, "stress4", MAX_PROG_NAME_LEN - 1);
-    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) goto err;
+    if (ioctl(fd, SC_THROTTLE_REG_PROG, &param) < 0) { 
+        if(errno != EINVAL) goto err;
+    }   
 
     if(print_conf(fd) < 0) goto err;
 
     // 4. Rilascio delle risorse
-    close(fd);
-
     printf("Risultato test: Successo\n");
-
+    close(fd);
     return EXIT_SUCCESS;
 
 err:

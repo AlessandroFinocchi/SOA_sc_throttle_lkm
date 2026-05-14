@@ -49,8 +49,6 @@ static void tb_timer_callback(struct timer_list *t) {
      */
     mod_timer(&tb_timer, jiffies + 1 * HZ);
 
-    // printk("%s: token-bucket - Token refill\n", MODNAME);
-
     sctrt_wake_up_weq();
 }
 

@@ -31,7 +31,7 @@ INCLUDE_DIRS := $(sort $(dir $(wildcard $(src)/include/ $(src)/include/*/)))
 ccflags-y += $(addprefix -I, $(INCLUDE_DIRS))
 # ccflags-y += -DPRIO_FIFO # => WEQ_UNINT
 # ccflags-y += -DWEQ_UNINT
-ccflags-y += -DDEBUG
+# ccflags-y += -DDEBUG
 
 # ==============================================================================
 # STANDARD MAKE PASS (Passo 1: eseguito dall'utente da riga di comando)

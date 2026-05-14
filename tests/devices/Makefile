@@ -1,6 +1,12 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g -I../../include/devices
 
+all:
+	make perm ops state prof
+
+clean:
+	rm -f perm ops state prof
+
 perm: test_ioctl_permissions.c
 	$(CC) $(CFLAGS) -o $@ $<
 
@@ -12,6 +18,3 @@ state: test_ioctl_monitor_state.c
 
 prof: test_ioctl_profiling.c
 	$(CC) $(CFLAGS) -o $@ $<
-
-clean:
-	rm -f perm ops state prof

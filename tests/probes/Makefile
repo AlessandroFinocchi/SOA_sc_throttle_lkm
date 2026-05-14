@@ -1,6 +1,13 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g -I../../include/devices
 
+
+all:
+	make single stress stress2 stresses stresses2 perf
+
+clean:
+	rm -f single stress stress2 stresses stresses2 perf
+
 single: probe_single.c
 	$(CC) $(CFLAGS) -o $@ $<
 
@@ -19,6 +26,3 @@ stresses2: probe_stresses.c
 # da eseguire come root
 perf: probe_perf.c
 	$(CC) -O2 $(CFLAGS) -o $@ $< -lm
-
-clean:
-	rm -f single stress stress2 stresses stresses2 perf

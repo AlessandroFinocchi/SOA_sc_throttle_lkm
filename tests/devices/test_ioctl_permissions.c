@@ -66,14 +66,14 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    // 8. Invocazione della system call w_ioctl
+    // 8. Invocazione della ioctl in scrittura
     if (ioctl(fd, SC_THROTTLE_SET_STATE, &param) != -EPERM) {
         fprintf(stderr, "Errore w_ioctl non-root level: %s\n", strerror(errno));
         close(fd);
         return EXIT_FAILURE;
     }
 
-    // 9. Invocazione della system call r_ioctl
+    // 9. Invocazione della ioctl in lettura
     if (ioctl(fd, SC_THROTTLE_GET_METRICS, &param) < 0) {
         fprintf(stderr, "Errore r_ioctl non-root level: %s\n", strerror(errno));
         close(fd);

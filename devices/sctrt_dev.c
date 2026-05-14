@@ -24,9 +24,10 @@ static struct file_operations fops = {
 };
 
 static char *devnode_mode(const struct device *dev, umode_t *mode){
-	 /* Lettura a tutti
-	  * scrittura solo all'owner (root) 
-	  * esecuzione a nessuno */
+	 /* Modalità d'accesso:
+	  * - lettura a tutti
+	  * - scrittura solo all'owner (root) 
+	  * - esecuzione a nessuno */
     if (mode) {
         *mode = 0644;
     }
