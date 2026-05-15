@@ -27,12 +27,17 @@ Inoltre, l'LKM espone dei dati riguardanti:
 
 Fanno parte della repository anche il codice user-level necessario per la configurazione dell'LKM e gli applicativi per eseguire i test funzionali del sistema.
 
-## Architettura
-Per maggiori informazioni sul design del modulo, consultare la [Documentazione Architettura](docs/architecture.md).
-
 ## Guida all'Uso
 Per istruzioni sulla configurazione e l'utilizzo pratico, fare riferimento alla [Guida all'Uso](docs/usage_guide.md).
 
+## Architettura
+Per maggiori informazioni sul design del modulo, consultare la [Documentazione Architettura](docs/architecture.md).
+
+## Test e User suite
+Per informazioni sulla suite di programmi di test/user, consultare la [Documentazione test/user](docs/tests.md).
+
+## Performance
+Per vedere l'analisi delle performance effettuata 
+
 ## Sviluppi Futuri
-- Il modulo è stato attualmente sviluppato per kernel 6.17. Tra i lavori futuri si prevede di estenderne la compatibilità per supportare in maniera nativa versioni aggiuntive del kernel Linux.
-- Il componente di intercettazione `sctrt_hook` può ridirezionare un thread svegliato da un segnale che non ha preso alcun token verso la ni syscall, attualmente un tale thread viene semplicemente rimesso a dormire.
+- Il modulo è stato attualmente sviluppato per kernel 6.12.73. Tra i lavori futuri si prevede di estenderne la compatibilità per supportare in maniera nativa versioni aggiuntive del kernel Linux. Particolare attenzione va portata al modulo delle kprobe, che successivamente alla versione 6.12 ha subito dei cambiamenti che impediscono il riderezionamento del flusso in modo banale (vedere il componente [sctrt_hook](probes/sctrt_hook.c) e la [documentazione probes](docs/arch/probes.md)).
