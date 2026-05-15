@@ -85,7 +85,9 @@ int sctrt_wait_on_weq() {
 #ifdef PRIO_FIFO
     /* Acquisizione atomica del ticket per il thread corrente */
     u64 my_ticket = atomic64_fetch_add(1, &sctrt_ticket_head);
-	// printk("%s: core - thread entered with ticket %llu\n", MODNAME, my_ticket);
+#ifdef DEBUG
+	printk("%s: core - thread entered with ticket %llu\n", MODNAME, my_ticket);
+#endif
 #endif
 
 #ifdef WEQ_UNINT
@@ -116,7 +118,9 @@ int sctrt_wait_on_weq() {
      * la tail e risveglia gli altri thread affinché il prossimo 
      * nella sequenza possa valutare la propria condizione. 
      */
-	// printk("%s: core - thread exited with ticket %llu\n", MODNAME, my_ticket);
+#ifdef DEBUG
+	printk("%s: core - thread exited with ticket %llu\n", MODNAME, my_ticket);
+#endif
     atomic64_inc(&sctrt_ticket_tail);
     wake_up_all(&sctrt_weq);
 #endif

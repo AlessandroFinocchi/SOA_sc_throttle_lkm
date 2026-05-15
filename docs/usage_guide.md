@@ -5,8 +5,27 @@
 Il modulo va gestito dentro la cartella root del progetto.
 
 ### Compilazione
+E' possibile compilare il modulo con 3 configurazioni:
+1. Thread interrompibili con politica di risveglio decisa dallo scheduler.
+    ```
+    make
+    ```
+2. Thread non interrompibili con politica di risveglio decisa dallo scheduler.
+    ```
+    make KCFLAGS="-DWEQ_UNINT"
+    ```
+3. Thread non interrompibili con politica di risveglio FIFO
+    ```
+    make KCFLAGS="-DPRIO_FIFO"
+    ```
+Inoltre è possibile aggiungere il flag `DEBUG` per rendere più verboso il modulo a runtime, aggiungendolo ai `KCFLAGS`
 ```
-make all
+make KCFLAGS="-DPRIO_FIFO -DDEBUG"
+```
+
+### Pulizia directory
+```
+make clean
 ```
 
 ### Inserimento
