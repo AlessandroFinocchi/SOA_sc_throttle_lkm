@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 #define ITERATIONS (1000 * 1000 * 10)
 
@@ -20,7 +21,7 @@ int compare_doubles(const void *a, const void *b) {
     return 0;
 }
 
-// Funzione per isolare il processo e mimare la non-preemption
+// Funzione per isolare il processo e minimizzare la preemption
 void setup_isolated_environment() {
     // 1. Lock della memoria per prevenire Page Faults
     if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
@@ -44,6 +45,14 @@ void setup_isolated_environment() {
 }
 
 int main() {
+    // 1. Validazione rigorosa del contesto di esecuzione (EUID)
+    if (geteuid() != 0) {
+        fprintf(stderr, "Errore critico: permessi insufficienti .\n");
+        fprintf(stderr, "Il programma deve essere eseguito con privilegi di root (EUID = 0).\n");
+        fprintf(stderr, "EUID corrente: %d\n", geteuid());
+        return EXIT_FAILURE;
+    }
+
     // Configurazione dell'ambiente Real-Time
     setup_isolated_environment();
 

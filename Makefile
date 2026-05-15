@@ -31,7 +31,7 @@ INCLUDE_DIRS := $(sort $(dir $(wildcard $(src)/include/ $(src)/include/*/)))
 ccflags-y += $(addprefix -I, $(INCLUDE_DIRS))
 # ccflags-y += -DPRIO_FIFO # => WEQ_UNINT
 # ccflags-y += -DWEQ_UNINT
-# ccflags-y += -DDEBUG
+ccflags-y += -DDEBUG
 
 # ==============================================================================
 # STANDARD MAKE PASS (Passo 1: eseguito dall'utente da riga di comando)
@@ -47,15 +47,15 @@ PWD := $(shell pwd)
 all:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
-# 	@if [ -f $(MODULE_NAME).ko ]; then \
-# 		mv $(MODULE_NAME).ko /tmp/$(MODULE_NAME)_save.ko; \
-# 	fi
+	@if [ -f $(MODULE_NAME).ko ]; then \
+		mv $(MODULE_NAME).ko /tmp/$(MODULE_NAME)_save.ko; \
+	fi
 
-# 	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
-# 	@if [ -f /tmp/$(MODULE_NAME)_save.ko ]; then \
-# 		mv /tmp/$(MODULE_NAME)_save.ko $(MODULE_NAME).ko; \
-# 	fi
+	@if [ -f /tmp/$(MODULE_NAME)_save.ko ]; then \
+		mv /tmp/$(MODULE_NAME)_save.ko $(MODULE_NAME).ko; \
+	fi
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
