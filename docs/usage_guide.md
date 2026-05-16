@@ -39,7 +39,7 @@ make rm
 ```
 
 
-## Test suite
+## Test/User suite
 
 ### Device
 1. Dalla cartella root del progetto entrare nella sezione dei test per il character device

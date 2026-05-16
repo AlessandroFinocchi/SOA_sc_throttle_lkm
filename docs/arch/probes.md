@@ -11,10 +11,31 @@ L'infrastruttura di intercettazione è modulata in due componenti principali, se
 *   **`sctrt_kprobectx_saver.c` e `sctrt_kprobectx_saver.h`**: Permette il salvataggio del contesto di probing, necessario per rendere la kprobe preemptable.
 
 ## 3. Ricerca del contesto di probing
-La ricerca del contesto di probing è funzione del design dell'allocatore della memoria per-CPU (`linux/percpu.c`), che divide le variabili in base al loro ciclo di vita: *Statiche* vs *Dinamiche*.
-- **Variabili Statiche**: Le kprobes sono un sottosistema integrato nel kernel. La variabile che mantiene lo stato è definita tramite la macro `DEFINE_PER_CPU` nei sorgenti del kernel stesso (`linux/kprobes.c`). Durante la fase di linking, queste variabili vengono compattate nel primissimo blocco di memoria per-CPU, noto come *First Chunk*. I loro offset relativi alla base per-CPU partono da $0$ e crescono progressivamente di poche decine di kilobyte, occupando parzialmente il First Chunk.
-- **Variabili Dinamiche**: Tutte le variabili allocate tramite `alloc_percpu()` sono caricate a run-time dall'allocatore in aree successive a quelle occupate dalle variabili per-CPU statiche.
+Avere a disposizioe il contesto di probing è essenziale per rendere una kprobe preemptable.Infatti, normalmente gli handler delle kprobe eseguono in interrupt context, ma in questo caso, siccome l'handler della kprobe può a dormire il thread che lo invoca su una wait-event queue, serve creare una ezione bloccante interna all'handler per permette questa operazione. 
 
-Questo meccanismo impone la seguente relazione spaziale invariante (in condizioni standard):$$\text{Offset}_{\text{Dinamico}} > \text{Offset}_{\text{Statico}}$$
+Per farlo, è cruciale avere a disposizione il contesto di probing, in modo da ripristinarlo correttamente una volta che la sezione bloccante temina.
 
-In tal modo è possibile effettuare una ricerca del contesto di probing nell'area di memoria dedicata alle variabili per-CPU, allocando una variabile dinamica e ricercando a ritroso il contesto, senza rischiare fault di memoria.
+Nella ricerca del conteso di probing, quello che si cerca in particolare è l'offset della struttura di contesto di probing `struct kprobe`, presente quando una kprobe esegue e sempre allo stesso offset in tutte le per-CPU memory (per via di come funziona il sottosistema `percpu`). Dunque, una volta trovato, può essere salvato per essere riutilizzato.
+
+A questo punto:
+- Prima di entrare nella sezione bloccante, si mette a `NULL` l'area di memoria in cui è presente la struttura per simulare di non eseguire alcuna probe.
+- Dopo essere usciti dalla sezione bloccante, si ripristina il contesto di probe in modo che il sottosistema di probing si comporti correttamente mentre esegue l'handler.
+
+
+## 4. Hijacking del flusso d'esecuzione
+Per robustezza del modulo quando è configurato con wait-event queue interrompibili, se un thread è svegliato da un segnale e non perchè ha preso un token, per prevenire situazioni in cui un thread appositamente fa sì di essere colpito da segnali per aggirare il rate-liming del throttling, si annulla l'effetto della system call tramite il seguente meccanismo di *Hijacking del flusso d'esecuzione*:
+
+```c
+unsigned long ret_addr = *(unsigned long *)the_regs->sp;
+the_regs->ip = ret_addr;
+the_regs->sp += sizeof(long);
+the_regs->ax = -EPERM;
+return 1;
+```  
+
+Questo codice:
+1. Estrae l'indirizzo dell'istruzione successiva alla system call invocata e lo mette in `ret_addr`.
+2. Sovrascrive l'instruction pointer con il valore di `ret_addr` in modo da continuare l'esecuzione da quel punto.
+3. Riallinea lo stack, simulando l'effetto dell'istruzione `pop`.
+4. Imposta il valore di ritorno della system call a `-EPERM`, comunicando che l'operazione è stata annullata poichè non permessa.
+5. Ritorna 1: ritornare un valore diverso da 0 in una kprobe ha come effetto quello di annullare il **Single-Stepping** dell'istruzione originale, andando di fatto a ripristinare immediatamente i registri in funzione alla `struct pt_regs` modificata e poi riprendendo il Single-Stepping.

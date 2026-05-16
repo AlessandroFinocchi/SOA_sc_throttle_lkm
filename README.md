@@ -41,3 +41,4 @@ Per vedere l'analisi delle performance effettuata
 
 ## Sviluppi Futuri
 - Il modulo è stato attualmente sviluppato per kernel 6.12.73. Tra i lavori futuri si prevede di estenderne la compatibilità per supportare in maniera nativa versioni aggiuntive del kernel Linux. Particolare attenzione va portata al modulo delle kprobe, che successivamente alla versione 6.12 ha subito dei cambiamenti che impediscono il riderezionamento del flusso in modo banale (vedere il componente [sctrt_hook](probes/sctrt_hook.c) e la [documentazione probes](docs/arch/probes.md)).
+- A tempo di smontaggio del modulo, invece di aspettare in polling che tutti escano alla sezione bloccante, si può usare la **wait for completion barrier** (vedere [Documentazione Completions](https://docs.kernel.org/scheduler/completion.html))
