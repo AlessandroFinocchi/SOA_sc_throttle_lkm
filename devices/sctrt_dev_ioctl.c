@@ -16,8 +16,7 @@ long sctrt_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg) {
 
     /* Se il comando è una scrittura */
     if (_IOC_DIR(cmd) & _IOC_WRITE) {
-        /* 
-         * Verifica formale dell'Effective User ID. 
+        /* Verifica formale dell'Effective User ID. 
          * Garantisce che solo l'utente root globale possa procedere.
          */
         if (!uid_eq(current_euid(), GLOBAL_ROOT_UID))

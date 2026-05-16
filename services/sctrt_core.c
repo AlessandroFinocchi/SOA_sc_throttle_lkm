@@ -129,9 +129,7 @@ int sctrt_wait_on_weq() {
 }
 
 void sctrt_wake_up_weq() {
-    /*
-     * Svuota la wait queue: risveglia tutti i thread pendenti.
-     */
+    /* Risveglia tutti i thread pendenti. */
 #ifdef WEQ_UNINT
     /* Risveglio per code TASK_UNINTERRUPTIBLE */
     wake_up_all(&sctrt_weq);

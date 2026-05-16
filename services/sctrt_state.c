@@ -90,12 +90,15 @@ int sctrt_monitor_enable() {
 void sctrt_monitor_disable() {
     if(sctrt_is_monitor_active()){
         atomic_set(&(state->is_active), false);
+        sctrt_wake_up_weq();
 
         while (atomic_read(&sctrt_in_flight) != 0) {
-            sctrt_wake_up_weq();
             msleep(100);
         }
 
+        /* A questo punto, nessun thread può essere ancora, 
+         * o finire dentro la sezione preemptable dell'handler 
+         * della kprobe, quindi è smontabile. */
         sctrt_hook_exit();
     }
 }

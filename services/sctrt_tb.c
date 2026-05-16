@@ -26,15 +26,16 @@ atomic_t tb_tokens ____cacheline_aligned_in_smp;
 static atomic_t tb_max_tokens __read_mostly;
 
 /**
- * Strutture per la gestione del Timer standard */
+ * Strutture per la gestione del Timer standard
+ */
 static struct timer_list tb_timer;
 
 /**
  * tb_timer_callback() - Handler del timer.
  * @t: puntatore alla struttura timer_list.
  *
- * Viene eseguito in contesto SoftIRQ. Effettua il refill atomico e riarma
- * se stesso per il tick corrispondente a 1 secondo nel futuro.
+ * Viene eseguito in contesto SoftIRQ. Effettua il refill atomico 
+ * e riarma il timer stesso esattamente ad 1 secondo nel futuro.
  */
 static void tb_timer_callback(struct timer_list *t) {
     /* Refill dei token */
@@ -52,12 +53,6 @@ static void tb_timer_callback(struct timer_list *t) {
     sctrt_wake_up_weq();
 }
 
-/**
- * token_bucket_update_max() - Aggiorna la capacità del bucket a runtime.
- * @new_max_tokens: il nuovo numero massimo di token al secondo.
- * L'aggiornamento viene registrato tramite operazione atomica. 
- * Il nuovo limite sarà caricato dal timer_callback nel prossimo ciclo.
- */
 void token_bucket_set_max(uint new_max) {
     if (new_max == 0) {
         printk("%s: token-bucket - Attempted to set max_tokens to 0\n", MODNAME);
@@ -66,8 +61,6 @@ void token_bucket_set_max(uint new_max) {
     
     atomic_set(&tb_max_tokens, new_max);
     printk("%s: token-bucket - MAX tokens updated to %u\n", MODNAME, new_max);
-
-    sctrt_wake_up_weq();
 }
 
 uint token_bucket_get_max(void) {
@@ -88,7 +81,7 @@ int token_bucket_init(uint max_tokens) {
      */
     timer_setup(&tb_timer, tb_timer_callback, 0);
     
-    /* Avvia il timer schedulandolo tra esattamente 1 secondo (HZ tick) */
+    /* Avvia il timer schedulandolo tra esattamente 1 secondo */
     mod_timer(&tb_timer, jiffies + 1 * HZ);
     
     printk("%s: token-bucket - Initialized with MAX=%d and \xcf\x84 = 1s\n", MODNAME, max_tokens);

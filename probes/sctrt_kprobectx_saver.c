@@ -11,17 +11,15 @@ struct kprobe** kprobe_ctx_offset;
 // Funzione bersaglio isolata. 'noinline' impedisce al compilatore di ottimizzarla.
 // 'asm("")' agisce come barriera, garantendo che il blocco non venga ottimizzato.
 static noinline void dummy_target(void) {
-    asm(""); 
+    asm("");
 }
 
 static int __kprobes dummy_hook(struct kprobe *p, struct pt_regs *regs) {
-	/* Brute force search for the position of the kprobe context */
+	/* Ricerca brute force dell'offset al kprobe context nella per-CPU memory */
 	struct kprobe **temp_offset = 0;
 	struct kprobe *temp;
 	while (copy_from_kernel_nofault(&temp, this_cpu_ptr(temp_offset), 
                                     sizeof(struct kprobe *)) != -EFAULT) {
-		/* Check if *temp_ptr points at the variable representing the
-		 * kprobe context  */
 		if (temp == p) {
 			kprobe_ctx_offset = temp_offset;
 			return 0;
@@ -29,6 +27,7 @@ static int __kprobes dummy_hook(struct kprobe *p, struct pt_regs *regs) {
 		temp_offset++;
 	}
 
+    kprobe_ctx_offset = 0;
 	return 0;
 }
 
@@ -48,7 +47,13 @@ int sctrt_save_probectx(void) {
     // 2. Innesco sincrono: forziamo l'esecuzione della dummy kprobe
     dummy_target();
 
-    // 3. Cleanup dummy kprobe
+    if (kprobe_ctx_offset == 0) {
+        printk("%s: probes - Probes context discovery failed.\n", MODNAME);
+        status = -EINVAL;
+        return status;
+    }
+
+    // 3. Cleanup della dummy kprobe, non serve più
     unregister_kprobe(&dummy_probe);
 
     printk("%s: probes - Probes context discovery finished\n", MODNAME);

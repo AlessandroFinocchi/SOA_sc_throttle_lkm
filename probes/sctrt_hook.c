@@ -15,6 +15,7 @@ static struct kprobe sc_probe;
 
 static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 
+	/* Se un thread critico invoca una syscall critica */
     if(unlikely(sctrt_check_throttling_compatibility(the_regs))) {
 
 		if(!sctrt_is_monitor_active()) return 0;
@@ -46,11 +47,14 @@ static int pre_hook(struct kprobe *p, struct pt_regs *the_regs) {
 #ifndef WEQ_UNINT
 			/* Se il thread è stato risvegliato da un segnale */
 			if(weq_ret != 0) {
+				/* Hijacking: ridirezionamento del flusso d'esecuzione verso
+				 * l'istruzione successiva alla syscall invocata, il cui
+				 * indirizzo è, secondo l'ABI, in cima allo stack*/
 				unsigned long ret_addr = *(unsigned long *)the_regs->sp;
 				the_regs->ip = ret_addr;
-				the_regs->sp += sizeof(long);
-				the_regs->ax = -EPERM;
-				return 1;
+				the_regs->sp += sizeof(long); // Allineamento stack
+				the_regs->ax = -EPERM;		  // Iniezione valore di ritorno
+				return 1;					  // Annulla single-stepping
 			}
 #endif
 		}

@@ -27,7 +27,8 @@ static char *devnode_mode(const struct device *dev, umode_t *mode){
 	 /* Modalità d'accesso:
 	  * - lettura a tutti
 	  * - scrittura solo all'owner (root) 
-	  * - esecuzione a nessuno */
+	  * - esecuzione a nessuno 
+	  */
     if (mode) {
         *mode = 0644;
     }
