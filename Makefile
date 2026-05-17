@@ -47,15 +47,15 @@ PWD := $(shell pwd)
 all:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
-	@if [ -f $(MODULE_NAME).ko ]; then \
-		mv $(MODULE_NAME).ko /tmp/$(MODULE_NAME)_save.ko; \
-	fi
+# 	@if [ -f $(MODULE_NAME).ko ]; then \
+# 		mv $(MODULE_NAME).ko /tmp/$(MODULE_NAME)_save.ko; \
+# 	fi
 
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
+# 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
-	@if [ -f /tmp/$(MODULE_NAME)_save.ko ]; then \
-		mv /tmp/$(MODULE_NAME)_save.ko $(MODULE_NAME).ko; \
-	fi
+# 	@if [ -f /tmp/$(MODULE_NAME)_save.ko ]; then \
+# 		mv /tmp/$(MODULE_NAME)_save.ko $(MODULE_NAME).ko; \
+# 	fi
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
