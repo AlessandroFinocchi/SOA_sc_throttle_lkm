@@ -5,17 +5,17 @@ Il sottosistema `probes` costituisce il nucleo operativo per l'intercettazione d
 Tramite le **Kprobes** l'LKM può instrumentare dinamicamente il codice delle system call del kernel, e sia montaggio che smontaggio sono operazioni dinamiche e asincrone che il sottomodulo gestisce internamente in maniera autonoma, assicurando una gestione semplice.
 
 ## 2. Componenti Architetturali e Moduli
-L'infrastruttura di intercettazione è modulata in due componenti principali, separati per garantire coesione logica e isolamento delle responsabilità:
+L'infrastruttura di intercettazione è modulata in due componenti principali, separati per isolare le responsabilità operative:
 
-*   **`sctrt_hook.c` e `sctrt_hook.h`**: Questo modulo implementa la logica di registrazione e deregistrazione dinamica dell'handler di intercettazione delle system call.
+*   **`sctrt_hook.c` e `sctrt_hook.h`**: Questo sottomodulo implementa la logica di registrazione e deregistrazione dinamica dell'handler di intercettazione delle system call.
 *   **`sctrt_kprobectx_saver.c` e `sctrt_kprobectx_saver.h`**: Permette il salvataggio del contesto di probing, necessario per rendere la kprobe preemptable.
 
 ## 3. Ricerca del contesto di probing
-Avere a disposizioe il contesto di probing è essenziale per rendere una kprobe preemptable.Infatti, normalmente gli handler delle kprobe eseguono in interrupt context, ma in questo caso, siccome l'handler della kprobe può a dormire il thread che lo invoca su una wait-event queue, serve creare una ezione bloccante interna all'handler per permette questa operazione. 
+Avere a disposizioe il contesto di probing è essenziale per rendere una kprobe preemptable. Infatti, normalmente gli handler delle kprobe eseguono in interrupt context, ma in questo caso, siccome l'handler della kprobe può mettere a dormire il thread che lo invoca su una wait-event queue, serve creare una finestra bloccante interna all'handler per permette questa operazione. 
 
 Per farlo, è cruciale avere a disposizione il contesto di probing, in modo da ripristinarlo correttamente una volta che la sezione bloccante temina.
 
-Nella ricerca del conteso di probing, quello che si cerca in particolare è l'offset della struttura di contesto di probing `struct kprobe`, presente quando una kprobe esegue e sempre allo stesso offset in tutte le per-CPU memory (per via di come funziona il sottosistema `percpu`). Dunque, una volta trovato, può essere salvato per essere riutilizzato.
+Nella ricerca del conteso di probing, quello che si cerca in particolare è l'offset della struttura di contesto di probing `struct kprobe`, presente quando una kprobe esegue, e posizionata sempre allo stesso offset in tutte le per-CPU memory (per via di come funziona il sottosistema `percpu`). Dunque, una volta trovato, può essere salvato per essere riutilizzato.
 
 A questo punto:
 - Prima di entrare nella sezione bloccante, si mette a `NULL` l'area di memoria in cui è presente la struttura per simulare di non eseguire alcuna probe.
@@ -36,6 +36,6 @@ return 1;
 Questo codice:
 1. Estrae l'indirizzo dell'istruzione successiva alla system call invocata e lo mette in `ret_addr`.
 2. Sovrascrive l'instruction pointer con il valore di `ret_addr` in modo da continuare l'esecuzione da quel punto.
-3. Riallinea lo stack, simulando l'effetto dell'istruzione `pop`.
+3. Riallinea lo stack, simulando l'effetto di una `pop`.
 4. Imposta il valore di ritorno della system call a `-EPERM`, comunicando che l'operazione è stata annullata poichè non permessa.
-5. Ritorna 1: ritornare un valore diverso da 0 in una kprobe ha come effetto quello di annullare il **Single-Stepping** dell'istruzione originale, andando di fatto a ripristinare immediatamente i registri in funzione alla `struct pt_regs` modificata e poi riprendendo il Single-Stepping.
+5. Ritorna 1: ritornare un valore diverso da 0 in una kprobe ha come effetto quello di annullare il **Single-Stepping** dell'istruzione originale, andando di fatto a ripristinare immediatamente i registri in funzione della `struct pt_regs` modificata e poi riprendendo il Single-Stepping.

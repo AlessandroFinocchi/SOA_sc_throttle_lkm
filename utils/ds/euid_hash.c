@@ -46,8 +46,6 @@ int euid_hash_add(struct euid_hash *hash, kuid_t euid) {
     new_node->euid = euid;
     h = hash_euid(euid);
 
-    // I lettori (in interrupt ctx) non acquisiscono mai lo spinlock,
-    // quindi non serve spin_lock_irqsave()
     spin_lock(&hash->lock);
     hash_add_rcu(hash->table, &new_node->node, h);
     spin_unlock(&hash->lock);
@@ -91,8 +89,6 @@ int euid_hash_del(struct euid_hash *hash, kuid_t euid) {
 
     h = hash_euid(euid);
 
-    // I lettori (in interrupt ctx) non acquisiscono mai lo spinlock,
-    // quindi non serve spin_lock_irqsave()
     spin_lock(&hash->lock);
     hash_for_each_possible(hash->table, curr, node, h) {
         if (uid_eq(curr->euid, euid)) {

@@ -14,7 +14,7 @@ Questo test va eseguito con `EUID = 0`. Controlla che le seguenti operazioni vad
 2. Impostazione del rate-limit di system call (valore 2)
 3. Registrazione di system calls (getpid)
 4. Registrazione di utenti (1000 e 1001)
-5. Registrazione di nomi di programmi ()
+5. Registrazione di nomi di programmi (stress)
 
 ### state
 Questo test va eseguito con `EUID = 0`. Controlla le operazioni di accensione e spegnimento del monitor.

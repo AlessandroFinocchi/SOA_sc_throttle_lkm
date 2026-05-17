@@ -37,6 +37,7 @@ int sc_bitmap_unregister(struct sc_bitmap *syscalls, unsigned int syscall_nr) {
     if (!syscalls || syscall_nr >= syscalls->max_entries) {
         return -EINVAL;
     }
+
     clear_bit(syscall_nr, syscalls->bitmap);
     return 0;
 }
@@ -45,6 +46,7 @@ int sc_bitmap_lookup(struct sc_bitmap *syscalls, unsigned int syscall_nr) {
     if (!syscalls || syscall_nr >= syscalls->max_entries) {
         return 0;
     }
+    
     return test_bit(syscall_nr, syscalls->bitmap) != 0;
 }
 
