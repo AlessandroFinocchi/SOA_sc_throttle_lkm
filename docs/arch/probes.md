@@ -39,3 +39,20 @@ Questo codice:
 3. Riallinea lo stack, simulando l'effetto di una `pop`.
 4. Imposta il valore di ritorno della system call a `-EPERM`, comunicando che l'operazione è stata annullata poichè non permessa.
 5. Ritorna 1: ritornare un valore diverso da 0 in una kprobe ha come effetto quello di annullare il **Single-Stepping** dell'istruzione originale, andando di fatto a ripristinare immediatamente i registri in funzione della `struct pt_regs` modificata e poi riprendendo il Single-Stepping.
+
+
+## 5. Simbolo della probe
+Il simbolo che la kernel probe intercetta per intercettare una system cal è `x64_sys_call`: questo è l'unico simbolo, nel flusso d'esecuzione di una system call, al quale è possibile agganciare una kprobe, dunque è stata una scelta obbligata in questo caso.
+
+La catena di chiamate per arrivare ad una system call infatti è la seguente
+
+$$
+\text{(asm) entry\_SYSCALL\_64}
+\rightarrow \text{(c) do\_syscall\_64}
+\rightarrow \text{(c) do\_syscall\_x64}
+\rightarrow \text{(c) x64\_sys\_call}
+$$
+
+E l'unico simbolo instrumentabile è proprio l'ultimo.
+
+Per quanto riguarda la gestione dei segnali dunque, in caso di hijacking del flusso d'esecuzione, basta che l'instruction pointer punti all'istruzione successiva alla chiamata `x64_sys_call` nella funzione `do_syscall_x64`: nessun segnale sarà ritardato perchè il ritorno in userspace non viene saltato dall'Hijacking, perciò in quel momento (dentro il blocco di codice `entry\_SYSCALL\_64`) tutti quelli pendenti verranno eseguiti.
